@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 import structlog
 
 from app.config import settings
-from app.api.v1 import transcription, health
+from app.api.v1 import transcription, health, export
 from app.core.database import engine, Base
 
 
@@ -65,30 +65,64 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
 app.include_router(transcription.router, prefix="/api/v1/transcription", tags=["transcription"])
+app.include_router(export.router, prefix="/api/v1/export", tags=["export"])
 
 
 # WebSocket endpoint for real-time updates
 @app.websocket("/ws/jobs/{job_id}")
 async def job_progress_websocket(websocket: WebSocket, job_id: str):
     await websocket.accept()
+    
+    import redis.asyncio as aioredis
+    import json
+    import asyncio
+    
+    # Create Redis connection for pub/sub
+    redis_client = aioredis.from_url(settings.REDIS_URL)
+    pubsub = redis_client.pubsub()
+    
     try:
-        # TODO: Implement real-time job progress updates
-        # This will subscribe to Redis pub/sub for job updates
+        # Subscribe to job-specific progress channel
+        await pubsub.subscribe(f"job_progress:{job_id}")
+        
+        # Send initial connection message
         await websocket.send_json({
             "job_id": job_id,
             "status": "connected",
             "message": "WebSocket connection established"
         })
         
-        # Keep connection alive
-        while True:
-            data = await websocket.receive_text()
-            if data == "ping":
-                await websocket.send_text("pong")
-                
+        # Listen for progress updates and WebSocket messages
+        async def listen_for_progress():
+            async for message in pubsub.listen():
+                if message['type'] == 'message':
+                    try:
+                        progress_data = json.loads(message['data'])
+                        await websocket.send_json(progress_data)
+                    except Exception as e:
+                        logger.error("Failed to send progress update", error=str(e))
+        
+        async def listen_for_websocket():
+            while True:
+                try:
+                    data = await websocket.receive_text()
+                    if data == "ping":
+                        await websocket.send_text("pong")
+                except Exception:
+                    break  # WebSocket closed
+        
+        # Run both listeners concurrently
+        await asyncio.gather(
+            listen_for_progress(),
+            listen_for_websocket(),
+            return_exceptions=True
+        )
+        
     except Exception as e:
         logger.error("WebSocket error", error=str(e), job_id=job_id)
     finally:
+        await pubsub.unsubscribe(f"job_progress:{job_id}")
+        await redis_client.close()
         await websocket.close()
 
 

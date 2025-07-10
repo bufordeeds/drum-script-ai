@@ -5,10 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update
 from datetime import datetime
 import os
+import redis
+import json
 
 from app.config import settings
 from app.core.database import AsyncSessionLocal
-from app.models.transcription import TranscriptionJob, JobStatus
+from app.models.transcription import TranscriptionJob
+
+# Job status constants
+JOB_STATUS_PROCESSING = 'processing'
+JOB_STATUS_COMPLETED = 'completed' 
+JOB_STATUS_ERROR = 'error'
 
 # Initialize Celery
 celery_app = Celery(
@@ -34,15 +41,43 @@ celery_app.conf.update(
 
 logger = structlog.get_logger()
 
+# Redis client for pub/sub
+redis_client = redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
+
+
+def publish_progress(job_id: str, status: str, progress: int, stage: str = None, message: str = None):
+    """Publish progress update to Redis pub/sub channel"""
+    try:
+        progress_data = {
+            "job_id": job_id,
+            "status": status,
+            "progress": progress,
+            "stage": stage,
+            "message": message,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        # Publish to job-specific channel
+        redis_client.publish(f"job_progress:{job_id}", json.dumps(progress_data))
+        
+        # Also publish to general progress channel
+        redis_client.publish("job_progress", json.dumps(progress_data))
+        
+        logger.info("Published progress update", job_id=job_id, progress=progress, stage=stage)
+        
+    except Exception as e:
+        logger.error("Failed to publish progress", job_id=job_id, error=str(e))
+
 
 async def update_job_status(
     job_id: str,
     status: JobStatus,
     progress: int = None,
     error_message: str = None,
-    result_data: dict = None
+    result_data: dict = None,
+    stage: str = None
 ):
-    """Update job status in database"""
+    """Update job status in database and publish to WebSocket"""
     async with AsyncSessionLocal() as db:
         update_data = {"status": status}
         
@@ -55,10 +90,10 @@ async def update_job_status(
         if result_data:
             update_data["result_data"] = result_data
         
-        if status == JobStatus.PROCESSING and "started_at" not in update_data:
+        if status == JOB_STATUS_PROCESSING and "started_at" not in update_data:
             update_data["started_at"] = datetime.utcnow()
         
-        if status in [JobStatus.COMPLETED, JobStatus.ERROR]:
+        if status in [JOB_STATUS_COMPLETED, JOB_STATUS_ERROR]:
             update_data["completed_at"] = datetime.utcnow()
         
         await db.execute(
@@ -67,84 +102,52 @@ async def update_job_status(
             .values(**update_data)
         )
         await db.commit()
+        
+        # Publish progress update for real-time updates
+        publish_progress(
+            job_id=job_id,
+            status=status.value,
+            progress=progress or 0,
+            stage=stage,
+            message=error_message
+        )
 
 
 @celery_app.task(bind=True)
 def process_audio_task(self, job_id: str, user_id: str, file_path: str):
-    """Background task for audio processing"""
+    """Background task that delegates to ML worker for actual processing"""
     logger.info(
-        "Starting audio processing",
+        "Delegating audio processing to ML worker",
         job_id=job_id,
         user_id=user_id,
         file_path=file_path
     )
     
     try:
-        # Run async function in sync context
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        # Update status to processing
-        loop.run_until_complete(
-            update_job_status(job_id, JobStatus.PROCESSING, progress=10)
+        # Send task to ML worker
+        from celery import Celery
+        ml_worker = Celery(
+            'drum_transcription_worker',
+            broker=settings.CELERY_BROKER_URL,
+            backend=settings.CELERY_RESULT_BACKEND
         )
         
-        # TODO: Implement actual ML processing pipeline
-        # For now, simulate processing with progress updates
-        import time
-        
-        stages = [
-            ("Validating audio file", 20),
-            ("Separating drum track", 40),
-            ("Transcribing drums", 70),
-            ("Generating notation", 90),
-            ("Finalizing results", 100)
-        ]
-        
-        for stage_name, progress in stages:
-            logger.info(f"Processing stage: {stage_name}", job_id=job_id, progress=progress)
-            
-            # Update progress
-            self.update_state(
-                state='PROGRESS',
-                meta={'stage': stage_name, 'progress': progress}
-            )
-            
-            loop.run_until_complete(
-                update_job_status(job_id, JobStatus.PROCESSING, progress=progress)
-            )
-            
-            # Simulate processing time
-            time.sleep(2)
-        
-        # Mock result data
-        result_data = {
-            "tempo": 120,
-            "time_signature": "4/4",
-            "duration_seconds": 180.5,
-            "accuracy_score": 0.85
-        }
-        
-        # Mark as completed
-        loop.run_until_complete(
-            update_job_status(
-                job_id,
-                JobStatus.COMPLETED,
-                progress=100,
-                result_data=result_data
-            )
+        # Send to ML worker
+        result = ml_worker.send_task(
+            'tasks.transcription.transcribe_drums_task',
+            args=[job_id, file_path],
+            queue='transcription'
         )
         
-        logger.info("Audio processing completed", job_id=job_id)
+        # Wait for completion
+        final_result = result.get(timeout=300)  # 5 minute timeout
         
-        return {
-            'status': 'completed',
-            'result': result_data
-        }
+        logger.info("ML worker completed processing", job_id=job_id)
+        return final_result
         
     except Exception as e:
         logger.error(
-            "Audio processing failed",
+            "Audio processing delegation failed",
             job_id=job_id,
             error=str(e),
             exc_info=True
@@ -157,13 +160,9 @@ def process_audio_task(self, job_id: str, user_id: str, file_path: str):
             update_job_status(
                 job_id,
                 JobStatus.ERROR,
-                error_message=str(e)
+                error_message=str(e),
+                stage="error"
             )
-        )
-        
-        self.update_state(
-            state='FAILURE',
-            meta={'error': str(e)}
         )
         
         raise

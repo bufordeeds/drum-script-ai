@@ -1,13 +1,14 @@
 import os
-import sys
-# Add parent directory to path to import from backend
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from celery import Celery
 import structlog
 
-# Import the celery app from backend
-from backend.app.tasks.transcription import celery_app
+# Create Celery app for ML worker
+celery_app = Celery(
+    'drum_transcription_worker',
+    broker=os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0'),
+    backend=os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0'),
+    include=['tasks.transcription']
+)
 
 # Configure logging
 structlog.configure(

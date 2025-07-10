@@ -11,7 +11,13 @@ import aiofiles
 
 from app.core.database import get_db
 from app.models import User, TranscriptionJob
-from app.models.transcription import JobStatus as ModelJobStatus
+# Job status constants
+JOB_STATUS_PENDING = 'pending'
+JOB_STATUS_UPLOADING = 'uploading' 
+JOB_STATUS_VALIDATING = 'validating'
+JOB_STATUS_PROCESSING = 'processing'
+JOB_STATUS_COMPLETED = 'completed'
+JOB_STATUS_ERROR = 'error'
 from app.schemas.transcription import (
     FileUploadResponse, 
     JobStatusResponse, 
@@ -67,20 +73,22 @@ def validate_audio_file(file: UploadFile) -> None:
 async def upload_audio(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ):
     """Upload audio file for transcription"""
     try:
         # Validate file
         validate_audio_file(file)
         
+        # Get current user
+        current_user = await get_current_user(db)
+        
         # Create job record
         job = TranscriptionJob(
             user_id=current_user.id,
             filename=file.filename,
             file_size_bytes=file.size,
-            status=ModelJobStatus.UPLOADING
+            status=JOB_STATUS_UPLOADING
         )
         db.add(job)
         await db.commit()
@@ -95,7 +103,7 @@ async def upload_audio(
             await f.write(content)
         
         # Update job status
-        job.status = ModelJobStatus.PENDING
+        job.status = JOB_STATUS_PENDING
         await db.commit()
         
         # Queue processing task
@@ -128,10 +136,12 @@ async def upload_audio(
 @router.get("/jobs/{job_id}", response_model=JobStatusResponse)
 async def get_job_status(
     job_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get transcription job status"""
+    # Get current user
+    current_user = await get_current_user(db)
+    
     # Query job
     result = await db.execute(
         select(TranscriptionJob).where(
@@ -146,12 +156,12 @@ async def get_job_status(
     
     # Map status to schema
     status_map = {
-        ModelJobStatus.PENDING: JobStatus.PENDING,
-        ModelJobStatus.UPLOADING: JobStatus.UPLOADING,
-        ModelJobStatus.VALIDATING: JobStatus.VALIDATING,
-        ModelJobStatus.PROCESSING: JobStatus.PROCESSING,
-        ModelJobStatus.COMPLETED: JobStatus.COMPLETED,
-        ModelJobStatus.ERROR: JobStatus.ERROR
+        JOB_STATUS_PENDING: JobStatus.PENDING,
+        JOB_STATUS_UPLOADING: JobStatus.UPLOADING,
+        JOB_STATUS_VALIDATING: JobStatus.VALIDATING,
+        JOB_STATUS_PROCESSING: JobStatus.PROCESSING,
+        JOB_STATUS_COMPLETED: JobStatus.COMPLETED,
+        JOB_STATUS_ERROR: JobStatus.ERROR
     }
     
     return JobStatusResponse(
@@ -169,10 +179,12 @@ async def get_job_status(
 @router.get("/jobs/{job_id}/result", response_model=JobResultResponse)
 async def get_job_result(
     job_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get transcription job result"""
+    # Get current user
+    current_user = await get_current_user(db)
+    
     # Query job with result
     result = await db.execute(
         select(TranscriptionJob).where(
@@ -185,10 +197,10 @@ async def get_job_result(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
-    if job.status != ModelJobStatus.COMPLETED:
+    if job.status != JOB_STATUS_COMPLETED:
         return JobResultResponse(
             job_id=job.id,
-            status=JobStatus(job.status.value)
+            status=JobStatus(job.status)
         )
     
     # TODO: Generate actual download URLs from S3
@@ -209,10 +221,12 @@ async def get_job_result(
 @router.delete("/jobs/{job_id}")
 async def delete_job(
     job_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ):
     """Delete a transcription job"""
+    # Get current user
+    current_user = await get_current_user(db)
+    
     # Query job
     result = await db.execute(
         select(TranscriptionJob).where(

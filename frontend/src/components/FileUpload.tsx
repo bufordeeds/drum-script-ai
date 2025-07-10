@@ -39,7 +39,7 @@ export default function FileUpload({ onUploadSuccess }: FileUploadProps) {
       'audio/*': ['.mp3', '.wav', '.m4a']
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 50 * 1024 * 1024, // 50MB
     disabled: uploadMutation.isPending
   })
 

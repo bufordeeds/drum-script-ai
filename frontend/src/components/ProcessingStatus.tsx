@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useJobStatus } from '@/hooks/useTranscription'
-import { TranscriptionJob, ProcessingStage } from '@/types'
+import { useWebSocket } from '@/hooks/useWebSocket'
+import { TranscriptionJob, ProcessingStage, ProgressUpdate } from '@/types'
 
 interface ProcessingStatusProps {
   job: TranscriptionJob
@@ -20,6 +21,17 @@ const stageLabels: Record<ProcessingStage, string> = {
 
 export default function ProcessingStatus({ job, onJobUpdate }: ProcessingStatusProps) {
   const { data: jobStatus, isLoading } = useJobStatus(job.id)
+  
+  // WebSocket for real-time updates
+  const { isConnected } = useWebSocket(job.id, (update: ProgressUpdate) => {
+    // Update job with real-time progress
+    onJobUpdate({
+      ...job,
+      status: update.status,
+      progress: update.progress,
+      stage: update.stage,
+    })
+  })
 
   useEffect(() => {
     if (jobStatus) {
@@ -65,6 +77,12 @@ export default function ProcessingStatus({ job, onJobUpdate }: ProcessingStatusP
           {isProcessing && (
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
           )}
+          
+          {/* WebSocket connection indicator */}
+          <div className={`
+            w-2 h-2 rounded-full
+            ${isConnected ? 'bg-green-500' : 'bg-gray-300'}
+          `} title={isConnected ? 'Live updates active' : 'Live updates disconnected'} />
           
           <span className={`
             px-2 py-1 rounded-full text-xs font-medium

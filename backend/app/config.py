@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
     
     # File Upload
-    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
+    MAX_UPLOAD_SIZE: int = 50 * 1024 * 1024  # 50MB
     ALLOWED_AUDIO_FORMATS: list[str] = ["mp3", "wav", "m4a"]
     UPLOAD_DIR: str = "/app/uploads"
     
