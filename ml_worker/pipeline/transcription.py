@@ -8,6 +8,7 @@ import librosa
 from scipy import signal
 import tempfile
 import json
+import io
 
 # Music21 for notation generation
 from music21 import stream, note, tempo, meter, duration, pitch
@@ -230,7 +231,8 @@ class TranscriptionPipeline:
         # Add drum notes
         for drum_note in transcription.notes:
             # Convert drum MIDI pitch to music21 note
-            m21_note = note.Note(midi=drum_note.pitch)
+            from music21 import note as m21_note_module
+            m21_note = m21_note_module.Note(midi=drum_note.pitch)
             m21_note.offset = drum_note.onset_time
             m21_note.quarterLength = drum_note.duration * 4  # Convert to quarter note units
             m21_note.volume.velocity = int(drum_note.velocity * 127)
@@ -280,9 +282,103 @@ class TranscriptionPipeline:
             logger.error("Failed to generate MIDI", error=str(e))
             exports['midi'] = b'MThd\x00\x00\x00\x06\x00\x01\x00\x01\x00\x60MTrk...'  # Minimal MIDI header
         
-        # Generate PDF (placeholder - would need LilyPond or similar)
+        # Generate PDF using music21
         try:
-            # For now, create a simple text-based representation
+            # Try to convert the music21 stream to PNG then to PDF
+            import tempfile
+            import os
+            
+            # Create a temporary directory for the conversion
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # First try to write as PNG using music21
+                try:
+                    png_path = os.path.join(temp_dir, 'notation.png')
+                    score.write('png', fp=png_path)
+                    
+                    # If PNG generation succeeds, create a simple PDF with the image
+                    from reportlab.pdfgen import canvas
+                    from reportlab.lib.pagesizes import letter
+                    from reportlab.lib.utils import ImageReader
+                    from PIL import Image
+                    
+                    pdf_buffer = io.BytesIO()
+                    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+                    
+                    # Add title
+                    c.setFont("Helvetica-Bold", 16)
+                    c.drawString(50, 750, "Drum Transcription")
+                    c.setFont("Helvetica", 12)
+                    c.drawString(50, 730, f"Tempo: {transcription.tempo} BPM")
+                    c.drawString(50, 710, f"Time Signature: {transcription.time_signature}")
+                    c.drawString(50, 690, f"Notes: {len(transcription.notes)} drum hits detected")
+                    c.drawString(50, 670, f"Confidence: {transcription.confidence_score:.2%}")
+                    
+                    # Add notation image if it exists
+                    if os.path.exists(png_path):
+                        try:
+                            img = Image.open(png_path)
+                            # Scale image to fit page
+                            img_width, img_height = img.size
+                            max_width = 500
+                            max_height = 400
+                            
+                            if img_width > max_width or img_height > max_height:
+                                scale = min(max_width / img_width, max_height / img_height)
+                                img_width = int(img_width * scale)
+                                img_height = int(img_height * scale)
+                                img = img.resize((img_width, img_height), Image.LANCZOS)
+                            
+                            # Draw the image
+                            c.drawImage(ImageReader(img), 50, 200, width=img_width, height=img_height)
+                        except Exception as img_error:
+                            logger.warning("Failed to add notation image to PDF", error=str(img_error))
+                            c.drawString(50, 400, "Musical notation could not be rendered")
+                    
+                    c.save()
+                    exports['pdf'] = pdf_buffer.getvalue()
+                    logger.info("Generated PDF with notation")
+                    
+                except Exception as notation_error:
+                    logger.warning("Failed to generate notation image", error=str(notation_error))
+                    # Fallback to text-based PDF
+                    from reportlab.pdfgen import canvas
+                    from reportlab.lib.pagesizes import letter
+                    
+                    pdf_buffer = io.BytesIO()
+                    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+                    
+                    # Add title and content
+                    c.setFont("Helvetica-Bold", 16)
+                    c.drawString(50, 750, "Drum Transcription")
+                    c.setFont("Helvetica", 12)
+                    c.drawString(50, 730, f"Tempo: {transcription.tempo} BPM")
+                    c.drawString(50, 710, f"Time Signature: {transcription.time_signature}")
+                    c.drawString(50, 690, f"Notes: {len(transcription.notes)} drum hits detected")
+                    c.drawString(50, 670, f"Confidence: {transcription.confidence_score:.2%}")
+                    
+                    # Add note events
+                    y_pos = 600
+                    c.drawString(50, y_pos, "Drum Events:")
+                    y_pos -= 20
+                    
+                    for i, note in enumerate(transcription.notes[:20]):  # Show first 20 notes
+                        if y_pos < 100:  # Start new page if needed
+                            c.showPage()
+                            y_pos = 750
+                        
+                        c.drawString(70, y_pos, f"{note.onset_time:.2f}s - Pitch: {note.pitch}, Velocity: {note.velocity:.2f}")
+                        y_pos -= 15
+                    
+                    if len(transcription.notes) > 20:
+                        c.drawString(70, y_pos, f"... and {len(transcription.notes) - 20} more notes")
+                    
+                    c.save()
+                    exports['pdf'] = pdf_buffer.getvalue()
+                    logger.info("Generated text-based PDF")
+                    
+        except Exception as e:
+            logger.error("Failed to generate PDF", error=str(e))
+            # Final fallback - simple text
             pdf_content = f"""
 Drum Transcription
 Tempo: {transcription.tempo} BPM
@@ -290,13 +386,9 @@ Time Signature: {transcription.time_signature}
 Notes: {len(transcription.notes)} drum hits detected
 Confidence: {transcription.confidence_score:.2%}
 
-This is a placeholder PDF. To generate actual notation PDF,
-integrate with LilyPond or use music21's PDF export capabilities.
+This is a placeholder PDF. Musical notation could not be generated.
             """.strip()
             exports['pdf'] = pdf_content.encode('utf-8')
-        except Exception as e:
-            logger.error("Failed to generate PDF", error=str(e))
-            exports['pdf'] = b'PDF placeholder content'
         
         logger.info("Export generation complete", formats=list(exports.keys()))
         return exports

@@ -24,21 +24,25 @@ export const useJobStatus = (jobId: string | null, enabled = true) => {
     refetchInterval: (data) => {
       if (!data) return 1000
       const jobData = data as any
+      // Stop polling when job reaches terminal state
       if (jobData.status === 'completed' || jobData.status === 'error') {
         return false
       }
       return 1000 // Poll every second while processing
     },
+    refetchIntervalInBackground: false, // Stop polling when tab is not active
   })
 }
 
-export const useJobResult = (jobId: string | null) => {
+export const useJobResult = (jobId: string | null, jobCompleted: boolean = false) => {
   return useQuery({
     queryKey: ['job-result', jobId],
     queryFn: () => transcriptionApi.getJobResult(jobId!),
-    enabled: !!jobId,
+    enabled: !!jobId && jobCompleted,
     retry: 3,
-    refetchInterval: 1000, // Refetch every second to ensure we get the result
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false, // Don't refetch when component mounts
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   })
 }
 

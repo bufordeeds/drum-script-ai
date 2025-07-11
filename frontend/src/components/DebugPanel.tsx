@@ -19,9 +19,10 @@ export default function DebugPanel({ job, jobStatus, jobResult, isConnected }: D
 
   useEffect(() => {
     if (jobStatus) {
+      const isTerminal = jobStatus.status === 'completed' || jobStatus.status === 'error'
       setLogs(prev => [...prev, {
         timestamp: new Date().toISOString(),
-        message: 'Job Status Updated',
+        message: isTerminal ? `Job Status Updated - ${jobStatus.status.toUpperCase()} (polling stopped)` : 'Job Status Updated',
         data: jobStatus
       }].slice(-10)) // Keep last 10 logs
     }
@@ -199,6 +200,7 @@ export default function DebugPanel({ job, jobStatus, jobResult, isConnected }: D
           <div className="text-xs text-gray-500">
             <div>Environment: {process.env.NODE_ENV}</div>
             <div>WebSocket: {isConnected ? 'Connected' : 'Disconnected'}</div>
+            <div>Polling: {jobStatus?.status === 'completed' || jobStatus?.status === 'error' ? 'Stopped' : 'Active'}</div>
           </div>
         </div>
       )}

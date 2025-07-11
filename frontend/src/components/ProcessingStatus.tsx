@@ -22,7 +22,9 @@ const stageLabels: Record<ProcessingStage, string> = {
 
 export default function ProcessingStatus({ job, onJobUpdate, onDebugData }: ProcessingStatusProps) {
   const { data: jobStatus, isLoading } = useJobStatus(job.id)
-  const { data: jobResult } = useJobResult(job.id)
+  const currentJob = jobStatus || job
+  const isCompleted = currentJob.status === 'completed'
+  const { data: jobResult } = useJobResult(job.id, isCompleted)
   
   
   // WebSocket for real-time updates
@@ -75,8 +77,6 @@ export default function ProcessingStatus({ job, onJobUpdate, onDebugData }: Proc
     )
   }
 
-  const currentJob = jobStatus || job
-  const isCompleted = currentJob.status === 'completed'
   const isError = currentJob.status === 'error'
   const isProcessing = ['pending', 'processing', 'validating'].includes(currentJob.status)
   
