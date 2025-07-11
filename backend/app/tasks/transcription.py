@@ -32,7 +32,7 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     task_routes={
-        "app.tasks.transcription.process_audio_task": {"queue": "transcription"}
+        "app.tasks.transcription.process_audio_task": {"queue": "backend"}
     },
     worker_prefetch_multiplier=1,
     task_acks_late=True,
@@ -71,7 +71,7 @@ def publish_progress(job_id: str, status: str, progress: int, stage: str = None,
 
 async def update_job_status(
     job_id: str,
-    status: JobStatus,
+    status: str,
     progress: int = None,
     error_message: str = None,
     result_data: dict = None,
@@ -106,7 +106,7 @@ async def update_job_status(
         # Publish progress update for real-time updates
         publish_progress(
             job_id=job_id,
-            status=status.value,
+            status=status,
             progress=progress or 0,
             stage=stage,
             message=error_message
@@ -139,11 +139,8 @@ def process_audio_task(self, job_id: str, user_id: str, file_path: str):
             queue='transcription'
         )
         
-        # Wait for completion
-        final_result = result.get(timeout=300)  # 5 minute timeout
-        
-        logger.info("ML worker completed processing", job_id=job_id)
-        return final_result
+        logger.info("Sent task to ML worker", job_id=job_id, task_id=result.id)
+        return f"Delegated to ML worker with task ID: {result.id}"
         
     except Exception as e:
         logger.error(
@@ -159,7 +156,7 @@ def process_audio_task(self, job_id: str, user_id: str, file_path: str):
         loop.run_until_complete(
             update_job_status(
                 job_id,
-                JobStatus.ERROR,
+                JOB_STATUS_ERROR,
                 error_message=str(e),
                 stage="error"
             )

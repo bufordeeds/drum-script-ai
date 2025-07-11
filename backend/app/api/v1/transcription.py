@@ -25,7 +25,8 @@ from app.schemas.transcription import (
     JobStatus
 )
 from app.config import settings
-from app.tasks.transcription import process_audio_task
+from app.tasks.transcription import celery_app
+from app.services.s3 import s3_service
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -94,23 +95,68 @@ async def upload_audio(
         await db.commit()
         await db.refresh(job)
         
-        # Save file to disk
-        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-        file_path = os.path.join(settings.UPLOAD_DIR, f"{job.id}_{file.filename}")
+        # Read file content
+        content = await file.read()
         
-        async with aiofiles.open(file_path, 'wb') as f:
-            content = await file.read()
-            await f.write(content)
+        # Try S3 upload first, fallback to local storage
+        s3_key = None
+        file_path = None
+        
+        if s3_service.is_configured():
+            try:
+                # Generate S3 key for audio file
+                s3_key = s3_service.generate_file_key(
+                    prefix="audio",
+                    filename=file.filename,
+                    user_id=str(current_user.id)
+                )
+                
+                # Upload to S3
+                import io
+                file_stream = io.BytesIO(content)
+                s3_url = await s3_service.upload_file(
+                    file_data=file_stream,
+                    key=s3_key,
+                    content_type=file.content_type,
+                    metadata={
+                        'user_id': str(current_user.id),
+                        'job_id': str(job.id),
+                        'original_filename': file.filename
+                    }
+                )
+                
+                if s3_url:
+                    # Update job with S3 key
+                    job.s3_audio_key = s3_key
+                    logger.info("File uploaded to S3", job_id=str(job.id), s3_key=s3_key)
+                else:
+                    raise Exception("S3 upload returned None")
+                    
+            except Exception as e:
+                logger.warning("S3 upload failed, falling back to local storage", 
+                             error=str(e), job_id=str(job.id))
+                s3_key = None
+        
+        # Fallback to local storage if S3 failed or not configured
+        if not s3_key:
+            os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+            file_path = os.path.join(settings.UPLOAD_DIR, f"{job.id}_{file.filename}")
+            
+            async with aiofiles.open(file_path, 'wb') as f:
+                await f.write(content)
+            
+            logger.info("File saved locally", job_id=str(job.id), file_path=file_path)
         
         # Update job status
         job.status = JOB_STATUS_PENDING
         await db.commit()
         
-        # Queue processing task
-        process_audio_task.delay(
-            str(job.id),
-            str(current_user.id),
-            file_path
+        # Queue processing task with appropriate file reference
+        file_reference = s3_key if s3_key else file_path
+        celery_app.send_task(
+            'app.tasks.transcription.process_audio_task',
+            args=[str(job.id), str(current_user.id), file_reference],
+            queue='backend'
         )
         
         logger.info(

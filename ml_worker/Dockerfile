@@ -21,4 +21,4 @@ COPY . .
 RUN mkdir -p /app/models /app/uploads
 
 # Run Celery worker
-CMD ["celery", "-A", "worker", "worker", "--loglevel=info", "--concurrency=1"]
+CMD ["celery", "-A", "worker", "worker", "--loglevel=info", "--concurrency=1", "--queues=transcription"]
