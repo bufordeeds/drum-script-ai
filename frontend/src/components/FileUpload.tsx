@@ -20,7 +20,7 @@ export default function FileUpload({ onUploadSuccess }: FileUploadProps) {
     uploadMutation.mutate(file, {
       onSuccess: (response) => {
         onUploadSuccess({
-          id: response.jobId,
+          id: response.job_id,
           filename: file.name,
           status: response.status,
           progress: 0,

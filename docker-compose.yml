@@ -67,6 +67,7 @@ services:
     build:
       context: ./ml_worker
       dockerfile: Dockerfile
+    command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "--concurrency=1", "--queues=transcription"]
     environment:
       - DATABASE_URL=postgresql://drumuser:drumpass@postgres:5432/drumtranscribe
       - REDIS_URL=redis://redis:6379/0

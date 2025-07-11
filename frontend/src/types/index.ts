@@ -37,7 +37,7 @@ export interface TranscriptionResult {
 }
 
 export interface FileUploadResponse {
-  jobId: string
+  job_id: string
   message: string
   status: JobStatus
 }
@@ -55,10 +55,10 @@ export interface JobStatusResponse {
 }
 
 export interface JobResultResponse {
-  jobId: string
+  job_id: string
   status: JobStatus
   result?: TranscriptionResult
-  downloadUrls?: {
+  download_urls?: {
     musicxml: string
     midi: string
     pdf: string

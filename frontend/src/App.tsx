@@ -4,10 +4,12 @@ import ProcessingStatus from './components/ProcessingStatus'
 import NotationPreview from './components/NotationPreview'
 import ExportOptions from './components/ExportOptions'
 import ErrorBoundary from './components/ErrorBoundary'
+import DebugPanel from './components/DebugPanel'
 import { TranscriptionJob } from './types'
 
 function App() {
   const [currentJob, setCurrentJob] = useState<TranscriptionJob | null>(null)
+  const [debugData, setDebugData] = useState<{ jobStatus: any, jobResult: any, isConnected: boolean } | null>(null)
 
   return (
     <ErrorBoundary>
@@ -31,7 +33,11 @@ function App() {
               <FileUpload onUploadSuccess={setCurrentJob} />
             ) : (
               <>
-                <ProcessingStatus job={currentJob} onJobUpdate={setCurrentJob} />
+                <ProcessingStatus 
+                  job={currentJob} 
+                  onJobUpdate={setCurrentJob} 
+                  onDebugData={setDebugData}
+                />
                 
                 {currentJob.status === 'completed' && currentJob.result && (
                   <>
@@ -68,6 +74,14 @@ function App() {
             )}
           </div>
         </main>
+        
+        {/* Debug Panel - Only visible in development */}
+        <DebugPanel
+          job={currentJob}
+          jobStatus={debugData?.jobStatus}
+          jobResult={debugData?.jobResult}
+          isConnected={debugData?.isConnected || false}
+        />
       </div>
     </ErrorBoundary>
   )

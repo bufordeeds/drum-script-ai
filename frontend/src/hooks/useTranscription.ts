@@ -7,8 +7,8 @@ export const useUploadFile = () => {
   return useMutation({
     mutationFn: transcriptionApi.uploadFile,
     onSuccess: (data) => {
-      queryClient.setQueryData(['job', data.jobId], {
-        id: data.jobId,
+      queryClient.setQueryData(['job', data.job_id], {
+        id: data.job_id,
         status: data.status,
         progress: 0,
       })
@@ -37,6 +37,8 @@ export const useJobResult = (jobId: string | null) => {
     queryKey: ['job-result', jobId],
     queryFn: () => transcriptionApi.getJobResult(jobId!),
     enabled: !!jobId,
+    retry: 3,
+    refetchInterval: 1000, // Refetch every second to ensure we get the result
   })
 }
 
