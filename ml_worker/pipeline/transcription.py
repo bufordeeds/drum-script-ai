@@ -1,17 +1,20 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Dict, List
+from typing import List
 import structlog
 import os
 import numpy as np
 import librosa
-from scipy import signal
 import tempfile
-import json
 import io
+import torch
+import soundfile as sf
+from demucs.pretrained import get_model
+from demucs.api import separate
+from ADTLib import ADT
 
 # Music21 for notation generation
-from music21 import stream, note, tempo, meter, duration, pitch
+from music21 import stream, tempo, meter
 import pretty_midi
 
 logger = structlog.get_logger()
@@ -122,11 +125,8 @@ class TranscriptionPipeline:
         # Simple drum separation using frequency filtering
         # Focus on low-end (kick, bass) and high-end (hi-hats, cymbals)
         
-        # Calculate spectral centroid to identify percussive content
-        spectral_centroids = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
-        
         # Use harmonic-percussive separation
-        y_harmonic, y_percussive = librosa.effects.hpss(y)
+        _, y_percussive = librosa.effects.hpss(y)
         
         # Enhance percussive content
         drum_track = y_percussive * 1.5  # Boost percussive elements
@@ -151,7 +151,7 @@ class TranscriptionPipeline:
         sr = drum_audio["sample_rate"]
         
         # Detect tempo
-        detected_tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+        detected_tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
         tempo = int(detected_tempo)
         
         logger.info("Detected tempo", tempo=tempo)
@@ -177,7 +177,6 @@ class TranscriptionPipeline:
                 
                 # Simple drum classification based on spectral features
                 spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=window, sr=sr))
-                spectral_rolloff = np.mean(librosa.feature.spectral_rolloff(y=window, sr=sr))
                 zero_crossing_rate = np.mean(librosa.feature.zero_crossing_rate(window))
                 
                 # Classify drum type based on features
@@ -230,9 +229,9 @@ class TranscriptionPipeline:
         
         # Add drum notes
         for drum_note in transcription.notes:
-            # Convert drum MIDI pitch to music21 note
-            from music21 import note as m21_note_module
-            m21_note = m21_note_module.Note(midi=drum_note.pitch)
+            # Convert drum MIDI pitch to music21 note  
+            from music21 import note
+            m21_note = note.Note(midi=drum_note.pitch)
             m21_note.offset = drum_note.onset_time
             m21_note.quarterLength = drum_note.duration * 4  # Convert to quarter note units
             m21_note.volume.velocity = int(drum_note.velocity * 127)
@@ -361,7 +360,7 @@ class TranscriptionPipeline:
                     c.drawString(50, y_pos, "Drum Events:")
                     y_pos -= 20
                     
-                    for i, note in enumerate(transcription.notes[:20]):  # Show first 20 notes
+                    for note in transcription.notes[:20]:  # Show first 20 notes
                         if y_pos < 100:  # Start new page if needed
                             c.showPage()
                             y_pos = 750
@@ -431,3 +430,299 @@ This is a placeholder PDF. Musical notation could not be generated.
                 exc_info=True
             )
             raise
+
+
+class ModelManager:
+    """Manages loading and caching of ML models"""
+    
+    def __init__(self):
+        self.models = {}
+        self.device = self._setup_device()
+        logger.info("Model manager initialized", device=self.device)
+    
+    def _setup_device(self):
+        """Set up compute device (GPU if available, CPU fallback)"""
+        if torch.cuda.is_available():
+            return torch.device('cuda')
+        return torch.device('cpu')
+    
+    async def load_demucs_model(self, model_name='htdemucs_ft'):
+        """Load and cache Demucs model"""
+        if 'demucs' not in self.models:
+            try:
+                logger.info("Loading Demucs model", model_name=model_name)
+                model = get_model(model_name)
+                model.to(self.device)
+                self.models['demucs'] = model
+                logger.info("Demucs model loaded successfully")
+            except Exception as e:
+                logger.error("Failed to load Demucs model", error=str(e))
+                # Fallback to basic model
+                model = get_model('htdemucs')
+                model.to(self.device)
+                self.models['demucs'] = model
+                logger.warning("Using fallback Demucs model")
+        
+        return self.models['demucs']
+    
+    async def load_adt_model(self):
+        """Load and cache ADTLib model"""
+        if 'adt' not in self.models:
+            try:
+                logger.info("Loading ADTLib model")
+                self.models['adt'] = ADT()
+                logger.info("ADTLib model loaded successfully")
+            except Exception as e:
+                logger.error("Failed to load ADTLib model", error=str(e))
+                raise
+        
+        return self.models['adt']
+
+
+class EnhancedTranscriptionPipeline:
+    """Enhanced ML pipeline for drum transcription using Demucs v4 + ADTLib"""
+    
+    def __init__(self):
+        logger.info("Initializing enhanced transcription pipeline")
+        self.model_manager = ModelManager()
+        self.progress_callback = None
+        self.fallback_pipeline = TranscriptionPipeline()  # Fallback to basic pipeline
+    
+    def set_progress_callback(self, callback):
+        """Set callback for progress updates"""
+        self.progress_callback = callback
+        self.fallback_pipeline.set_progress_callback(callback)
+    
+    async def update_progress(self, job_id: str, stage: ProcessingStage, progress: int):
+        """Update processing progress"""
+        if self.progress_callback:
+            self.progress_callback(stage.value, progress)
+        
+        logger.info(
+            "Enhanced pipeline progress update",
+            job_id=job_id,
+            stage=stage.value,
+            progress=progress
+        )
+    
+    async def validate_audio(self, file_path: str) -> dict:
+        """Validate audio file format and duration (same as basic pipeline)"""
+        return await self.fallback_pipeline.validate_audio(file_path)
+    
+    async def separate_drums_with_demucs(self, audio_data: dict) -> dict:
+        """Isolate drum track using Demucs v4"""
+        logger.info("Starting Demucs drum separation")
+        
+        y = audio_data["audio"]
+        sr = audio_data["sample_rate"]
+        
+        try:
+            # Load Demucs model
+            demucs_model = await self.model_manager.load_demucs_model()
+            
+            # Convert to tensor format expected by Demucs
+            if y.ndim == 1:
+                audio_tensor = torch.tensor(y).unsqueeze(0).unsqueeze(0).float()  # [1, 1, samples]
+            else:
+                audio_tensor = torch.tensor(y).unsqueeze(0).float()  # [1, channels, samples]
+            
+            # Move to device
+            audio_tensor = audio_tensor.to(self.model_manager.device)
+            
+            # Separate using Demucs
+            with torch.no_grad():
+                # Use demucs.api.separate for high-level interface
+                separated = separate(demucs_model, audio_tensor.squeeze(0), sr, device=self.model_manager.device)
+                
+                # Extract drums track (index 0 for htdemucs_ft: drums, bass, other, vocals)
+                drums_tensor = separated[0]  # drums
+                drums_audio = drums_tensor.cpu().numpy()
+                
+                # If stereo, convert to mono by averaging channels
+                if drums_audio.ndim > 1:
+                    drums_audio = np.mean(drums_audio, axis=0)
+            
+            logger.info("Demucs separation complete", drum_track_duration=len(drums_audio) / sr)
+            
+            return {
+                "drums": drums_audio,
+                "sample_rate": sr,
+                "original": y,
+                "method": "demucs_v4"
+            }
+            
+        except Exception as e:
+            logger.error("Demucs separation failed, using fallback", error=str(e))
+            # Fallback to basic harmonic-percussive separation
+            return await self.fallback_pipeline.separate_drums(audio_data)
+    
+    async def transcribe_drums_with_adt(self, drum_audio: dict) -> TranscriptionOutput:
+        """Convert drum audio to MIDI/note events using ADTLib"""
+        logger.info("Starting ADTLib drum transcription")
+        
+        y = drum_audio["drums"]
+        sr = drum_audio["sample_rate"]
+        
+        try:
+            # Load ADTLib model
+            adt_model = await self.model_manager.load_adt_model()
+            
+            # Save audio to temporary file (ADTLib expects file path)
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                temp_path = temp_file.name
+                
+            # Write audio to temp file using soundfile
+            sf.write(temp_path, y, sr)
+            
+            try:
+                # Use ADTLib for transcription
+                result = adt_model([temp_path])
+                
+                # Parse ADTLib output to our format
+                notes = self._parse_adt_output(result, sr)
+                
+                # Detect tempo using librosa as backup
+                detected_tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+                tempo = int(detected_tempo)
+                
+                # Calculate confidence based on number of detections
+                confidence_score = min(0.95, 0.6 + (len(notes) / 100) * 0.3)
+                
+                logger.info("ADTLib transcription complete", 
+                          note_count=len(notes), 
+                          tempo=tempo,
+                          confidence=confidence_score)
+                
+                return TranscriptionOutput(
+                    tempo=tempo,
+                    time_signature="4/4",
+                    notes=notes,
+                    confidence_score=confidence_score
+                )
+                
+            finally:
+                # Clean up temp file
+                if os.path.exists(temp_path):
+                    os.unlink(temp_path)
+            
+        except Exception as e:
+            logger.error("ADTLib transcription failed, using fallback", error=str(e))
+            # Fallback to basic onset detection
+            return await self.fallback_pipeline.transcribe_drums(drum_audio)
+    
+    def _parse_adt_output(self, adt_result, sample_rate: int) -> List[DrumNote]:
+        """Parse ADTLib output to DrumNote format"""
+        notes = []
+        
+        try:
+            # ADTLib returns a list of dictionaries with onset times and drum types
+            for item in adt_result:
+                if isinstance(item, dict):
+                    # Extract onset times for different drum types
+                    for drum_type, onsets in item.items():
+                        if isinstance(onsets, list):
+                            for onset_time in onsets:
+                                # Map drum type to MIDI pitch
+                                pitch_map = {
+                                    'kick': 36,
+                                    'snare': 38,
+                                    'hihat': 42,
+                                    'cymbal': 49,
+                                    'tom': 41
+                                }
+                                
+                                pitch_val = pitch_map.get(drum_type.lower(), 38)  # Default to snare
+                                
+                                notes.append(DrumNote(
+                                    onset_time=float(onset_time),
+                                    pitch=pitch_val,
+                                    duration=0.125,  # 32nd note duration
+                                    velocity=0.8
+                                ))
+                        elif isinstance(onsets, (int, float)):
+                            # Single onset time
+                            pitch_map = {
+                                'kick': 36,
+                                'snare': 38,
+                                'hihat': 42,
+                                'cymbal': 49,
+                                'tom': 41
+                            }
+                            
+                            pitch_val = pitch_map.get(drum_type.lower(), 38)
+                            
+                            notes.append(DrumNote(
+                                onset_time=float(onsets),
+                                pitch=pitch_val,
+                                duration=0.125,
+                                velocity=0.8
+                            ))
+            
+            # Sort notes by onset time
+            notes.sort(key=lambda x: x.onset_time)
+            
+        except Exception as e:
+            logger.error("Failed to parse ADTLib output", error=str(e))
+            # Return empty list on parse failure
+            notes = []
+        
+        return notes
+    
+    async def generate_exports(self, transcription: TranscriptionOutput) -> dict:
+        """Generate exports (same as basic pipeline)"""
+        return await self.fallback_pipeline.generate_exports(transcription)
+    
+    async def process_audio(self, job: ProcessingJob) -> dict:
+        """Main enhanced processing pipeline"""
+        try:
+            # Stage 1: Audio validation and loading
+            await self.update_progress(job.job_id, ProcessingStage.VALIDATING, 10)
+            audio_data = await self.validate_audio(job.audio_file_path)
+            
+            # Stage 2: Enhanced source separation with Demucs
+            await self.update_progress(job.job_id, ProcessingStage.SOURCE_SEPARATION, 30)
+            separated = await self.separate_drums_with_demucs(audio_data)
+            
+            # Stage 3: Enhanced drum transcription with ADTLib
+            await self.update_progress(job.job_id, ProcessingStage.TRANSCRIBING, 60)
+            transcription = await self.transcribe_drums_with_adt(separated)
+            
+            # Stage 4: Generate exports
+            await self.update_progress(job.job_id, ProcessingStage.GENERATING_EXPORTS, 85)
+            exports = await self.generate_exports(transcription)
+            
+            # Stage 5: Complete
+            await self.update_progress(job.job_id, ProcessingStage.COMPLETED, 100)
+            
+            return {
+                "tempo": transcription.tempo,
+                "time_signature": transcription.time_signature,
+                "duration_seconds": audio_data["duration"],
+                "accuracy_score": transcription.confidence_score,
+                "exports": exports,
+                "processing_method": "enhanced_ml_pipeline"
+            }
+            
+        except Exception as e:
+            logger.error(
+                "Enhanced pipeline processing failed, trying fallback",
+                job_id=job.job_id,
+                error=str(e),
+                exc_info=True
+            )
+            
+            # Fallback to basic pipeline
+            try:
+                logger.info("Using fallback basic pipeline")
+                result = await self.fallback_pipeline.process_audio(job)
+                result["processing_method"] = "fallback_basic_pipeline"
+                return result
+            except Exception as fallback_error:
+                logger.error(
+                    "Both enhanced and fallback pipelines failed",
+                    job_id=job.job_id,
+                    enhanced_error=str(e),
+                    fallback_error=str(fallback_error),
+                    exc_info=True
+                )
+                raise

@@ -10,7 +10,7 @@ import boto3
 from botocore.exceptions import ClientError
 from sqlalchemy import create_engine, text
 from worker import celery_app
-from pipeline.transcription import TranscriptionPipeline
+from pipeline.transcription import TranscriptionPipeline, EnhancedTranscriptionPipeline
 
 logger = structlog.get_logger()
 
@@ -177,8 +177,21 @@ def transcribe_drums_task(self, job_id: str, file_reference: str):
         local_file_path = download_file_from_s3_or_local(file_reference)
         temp_file_downloaded = file_reference.startswith('audio/')  # Track if we downloaded from S3
         
-        # Initialize pipeline
-        pipeline = TranscriptionPipeline()
+        # Initialize pipeline - try enhanced ML pipeline first, fallback to basic
+        try:
+            logger.info("Attempting to initialize enhanced ML pipeline")
+            pipeline = EnhancedTranscriptionPipeline()
+            logger.info("Enhanced ML pipeline initialized successfully")
+        except Exception as e:
+            logger.warning("Enhanced pipeline initialization failed, using basic pipeline", error=str(e))
+            pipeline = TranscriptionPipeline()
+        
+        # Set up progress callback
+        def progress_callback(stage: str, progress: int):
+            update_job_in_db(job_id, 'processing', progress)
+            publish_progress(job_id, 'processing', progress, stage)
+        
+        pipeline.set_progress_callback(progress_callback)
         
         # Update job status to processing
         update_job_in_db(job_id, 'processing', 0)
