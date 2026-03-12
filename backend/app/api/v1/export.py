@@ -213,3 +213,106 @@ async def download_pdf(
         media_type=media_type,
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+@router.get("/mscx/{job_id}")
+async def download_mscx(
+    job_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """Download MuseScore XML (.mscx) file"""
+    current_user = await get_current_user(db)
+    job = await get_completed_job(job_id, current_user.id, db)
+    
+    # Check if file is stored in S3
+    if job.s3_export_keys and 'mscx' in job.s3_export_keys:
+        # Generate presigned URL for direct S3 access
+        s3_key = job.s3_export_keys['mscx']
+        presigned_url = await s3_service.generate_presigned_url(s3_key, expiration=3600)
+        
+        if presigned_url:
+            # Redirect to presigned URL for efficient download
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(url=presigned_url)
+        else:
+            # Fallback: stream from S3
+            file_stream = await s3_service.get_file_stream(s3_key)
+            if file_stream:
+                return StreamingResponse(
+                    file_stream,
+                    media_type="application/vnd.recordare.musicxml+xml",
+                    headers={"Content-Disposition": f"attachment; filename={job.filename}.mscx"}
+                )
+    
+    # Fallback to result_data (base64 encoded)
+    if not job.result_data or 'exports' not in job.result_data:
+        raise HTTPException(status_code=404, detail="Export data not found")
+    
+    mscx_data = job.result_data['exports'].get('mscx')
+    if not mscx_data:
+        raise HTTPException(status_code=404, detail="MuseScore XML export not found")
+    
+    # Decode base64 data back to bytes
+    if isinstance(mscx_data, str):
+        try:
+            mscx_data = base64.b64decode(mscx_data)
+        except Exception:
+            # Fallback for non-base64 string data
+            mscx_data = mscx_data.encode('utf-8')
+    
+    return StreamingResponse(
+        io.BytesIO(mscx_data),
+        media_type="application/vnd.recordare.musicxml+xml",
+        headers={"Content-Disposition": f"attachment; filename={job.filename}.mscx"}
+    )
+
+
+@router.get("/mscz/{job_id}")
+async def download_mscz(
+    job_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """Download MuseScore Compressed (.mscz) file"""
+    current_user = await get_current_user(db)
+    job = await get_completed_job(job_id, current_user.id, db)
+    
+    # Check if file is stored in S3
+    if job.s3_export_keys and 'mscz' in job.s3_export_keys:
+        # Generate presigned URL for direct S3 access
+        s3_key = job.s3_export_keys['mscz']
+        presigned_url = await s3_service.generate_presigned_url(s3_key, expiration=3600)
+        
+        if presigned_url:
+            # Redirect to presigned URL for efficient download
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(url=presigned_url)
+        else:
+            # Fallback: stream from S3
+            file_stream = await s3_service.get_file_stream(s3_key)
+            if file_stream:
+                return StreamingResponse(
+                    file_stream,
+                    media_type="application/vnd.recordare.musicxml.compressed",
+                    headers={"Content-Disposition": f"attachment; filename={job.filename}.mscz"}
+                )
+    
+    # Fallback to result_data (base64 encoded)
+    if not job.result_data or 'exports' not in job.result_data:
+        raise HTTPException(status_code=404, detail="Export data not found")
+    
+    mscz_data = job.result_data['exports'].get('mscz')
+    if not mscz_data:
+        raise HTTPException(status_code=404, detail="MuseScore compressed export not found")
+    
+    # Decode base64 data back to bytes
+    if isinstance(mscz_data, str):
+        try:
+            mscz_data = base64.b64decode(mscz_data)
+        except Exception:
+            raise HTTPException(status_code=500, detail="Invalid MuseScore data format")
+    
+    return StreamingResponse(
+        io.BytesIO(mscz_data),
+        media_type="application/vnd.recordare.musicxml.compressed",
+        headers={"Content-Disposition": f"attachment; filename={job.filename}.mscz"}
+    )

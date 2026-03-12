@@ -107,7 +107,9 @@ def upload_export_to_s3(export_data: bytes, export_type: str, job_id: str) -> st
         content_types = {
             'musicxml': 'application/vnd.recordare.musicxml+xml',
             'midi': 'audio/midi',
-            'pdf': 'application/pdf'
+            'pdf': 'application/pdf',
+            'mscx': 'application/vnd.recordare.musicxml+xml',
+            'mscz': 'application/vnd.recordare.musicxml.compressed'
         }
         content_type = content_types.get(export_type, 'application/octet-stream')
         

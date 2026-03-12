@@ -228,6 +228,32 @@ export default function ProcessingStatus({ job, onJobUpdate, onDebugData }: Proc
                         Download MIDI
                       </a>
                     )}
+                    
+                    {jobResult.download_urls.mscx && (
+                      <a
+                        href={jobResult.download_urls.mscx}
+                        download
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                      >
+                        <svg className="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10h1m4-6h1" />
+                        </svg>
+                        Download MuseScore XML
+                      </a>
+                    )}
+                    
+                    {jobResult.download_urls.mscz && (
+                      <a
+                        href={jobResult.download_urls.mscz}
+                        download
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        <svg className="-ml-0.5 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM20 12V8" />
+                        </svg>
+                        Download MuseScore Compressed
+                      </a>
+                    )}
                   </div>
                 )}
                 

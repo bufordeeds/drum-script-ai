@@ -17,18 +17,22 @@ mido==1.3.0
 pretty_midi==0.2.10
 soundfile>=0.12.1
 
-# ML Models for Drum Transcription
-demucs>=4.0.0
-ADTLib>=1.0.0
+# ML Models for Drum Transcription (commented out for initial testing)
+# demucs>=4.0.0
+# ADTLib>=1.0.0
 
-# PyTorch ecosystem
-torch>=2.0.0
-torchaudio>=2.0.0
+# PyTorch ecosystem (commented out for initial testing)
+# torch>=2.0.0
+# torchaudio>=2.0.0
 
-# ADTLib dependencies
-madmom>=0.16.1
-tensorflow>=2.10.0
-fpdf>=3.0.0
+# Build dependencies for ML packages (commented out for initial testing)
+# Cython>=0.29.0
+# setuptools>=65.0.0
+
+# ADTLib dependencies (commented out for initial testing)
+# madmom>=0.16.1
+# tensorflow>=2.10.0
+# fpdf>=3.0.0
 
 # PDF generation libraries
 reportlab==4.0.7

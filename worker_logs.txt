@@ -1,0 +1,171 @@
+/usr/local/lib/python3.11/site-packages/celery/platforms.py:829: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+ 
+ -------------- celery@7e7c085a10f0 v5.3.4 (emerald-rush)
+--- ***** ----- 
+-- ******* ---- Linux-6.10.14-linuxkit-aarch64-with-glibc2.36 2025-07-12 00:22:38
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         drum_transcription_worker:0xffffa92db550
+- ** ---------- .> transport:   redis://redis:6379/0
+- ** ---------- .> results:     redis://redis:6379/0
+- *** --- * --- .> concurrency: 1 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> transcription    exchange=transcription(direct) key=transcription
+                
+
+[tasks]
+  . tasks.transcription.transcribe_drums_task
+
+[2025-07-12 00:22:38,171: WARNING/MainProcess] /usr/local/lib/python3.11/site-packages/celery/worker/consumer/consumer.py:507: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2025-07-12 00:22:38,175: INFO/MainProcess] Connected to redis://redis:6379/0
+[2025-07-12 00:22:38,175: WARNING/MainProcess] /usr/local/lib/python3.11/site-packages/celery/worker/consumer/consumer.py:507: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2025-07-12 00:22:38,176: INFO/MainProcess] mingle: searching for neighbors
+[2025-07-12 00:22:39,183: INFO/MainProcess] mingle: all alone
+[2025-07-12 00:22:39,198: INFO/MainProcess] celery@7e7c085a10f0 ready.
+[2025-07-12 00:31:52,028: INFO/MainProcess] Task tasks.transcription.transcribe_drums_task[c28fb72c-e563-4da0-9b46-91eb80d809c5] received
+[2025-07-12 00:31:52,038: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "file_reference": "audio/4702f36f-7ee5-4e4c-947e-5c070ecf9c60/20250712_003150_40eb265f_studio-drum-samples.wav", "event": "Starting drum transcription", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:31:52.037527Z"}
+[2025-07-12 00:31:52,040: INFO/ForkPoolWorker-1] {"s3_key": "audio/4702f36f-7ee5-4e4c-947e-5c070ecf9c60/20250712_003150_40eb265f_studio-drum-samples.wav", "event": "Downloading file from S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:31:52.040773Z"}
+[2025-07-12 00:31:53,408: INFO/ForkPoolWorker-1] {"local_path": "/tmp/tmpc9zfoufb.wav", "event": "File downloaded from S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:31:53.408632Z"}
+[2025-07-12 00:31:53,409: INFO/ForkPoolWorker-1] {"event": "Attempting to initialize enhanced ML pipeline", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:31:53.409299Z"}
+[2025-07-12 00:31:53,410: INFO/ForkPoolWorker-1] {"event": "Initializing enhanced transcription pipeline", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:31:53.409984Z"}
+[2025-07-12 00:31:53,410: WARNING/ForkPoolWorker-1] {"error": "name 'torch' is not defined", "event": "Enhanced pipeline initialization failed, using basic pipeline", "logger": "tasks.transcription", "level": "warning", "timestamp": "2025-07-12T00:31:53.410278Z"}
+[2025-07-12 00:31:53,410: INFO/ForkPoolWorker-1] {"event": "Initializing transcription pipeline", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:31:53.410584Z"}
+[2025-07-12 00:31:53,453: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "status": "processing", "progress": 0, "stage": "validating", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:31:53.453775Z"}
+[2025-07-12 00:31:53,456: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "status": "processing", "progress": 10, "stage": "validating", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:31:53.456822Z"}
+[2025-07-12 00:31:53,456: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "stage": "validating", "progress": 10, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:31:53.456906Z"}
+[2025-07-12 00:31:53,457: INFO/ForkPoolWorker-1] {"file_path": "/tmp/tmpc9zfoufb.wav", "event": "Validating audio file", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:31:53.457024Z"}
+[2025-07-12 00:31:57,174: INFO/ForkPoolWorker-1] {"duration": 62.08696145124716, "sample_rate": 44100, "channels": 1, "event": "Audio validation complete", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:31:57.174794Z"}
+[2025-07-12 00:31:57,176: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "status": "processing", "progress": 30, "stage": "source_separation", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:31:57.176305Z"}
+[2025-07-12 00:31:57,176: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "stage": "source_separation", "progress": 30, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:31:57.176362Z"}
+[2025-07-12 00:31:57,176: INFO/ForkPoolWorker-1] {"event": "Starting drum separation", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:31:57.176398Z"}
+[2025-07-12 00:32:02,347: INFO/ForkPoolWorker-1] {"event": "Drum separation complete", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:02.347545Z"}
+[2025-07-12 00:32:02,350: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "status": "processing", "progress": 60, "stage": "transcribing", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:02.350589Z"}
+[2025-07-12 00:32:02,350: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "stage": "transcribing", "progress": 60, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:02.350652Z"}
+[2025-07-12 00:32:02,350: INFO/ForkPoolWorker-1] {"event": "Starting drum transcription", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:02.350692Z"}
+[2025-07-12 00:32:03,029: INFO/ForkPoolWorker-1] {"tempo": 13, "event": "Detected tempo", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:03.029086Z"}
+[2025-07-12 00:32:04,051: INFO/ForkPoolWorker-1] {"note_count": 15, "event": "Transcription complete", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.051266Z"}
+[2025-07-12 00:32:04,052: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "status": "processing", "progress": 85, "stage": "generating_exports", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.052597Z"}
+[2025-07-12 00:32:04,052: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "stage": "generating_exports", "progress": 85, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.052655Z"}
+[2025-07-12 00:32:04,052: INFO/ForkPoolWorker-1] {"event": "Generating export formats", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.052705Z"}
+[2025-07-12 00:32:04,054: ERROR/ForkPoolWorker-1] {"error": "cannot access local variable 'tempfile' where it is not associated with a value", "event": "Failed to generate MusicXML", "logger": "pipeline.transcription", "level": "error", "timestamp": "2025-07-12T00:32:04.054389Z"}
+[2025-07-12 00:32:04,054: ERROR/ForkPoolWorker-1] {"error": "cannot access local variable 'tempfile' where it is not associated with a value", "event": "Failed to generate MIDI", "logger": "pipeline.transcription", "level": "error", "timestamp": "2025-07-12T00:32:04.054461Z"}
+[2025-07-12 00:32:04,055: WARNING/ForkPoolWorker-1] {"error": "cannot support output in this format yet: png", "event": "Failed to generate notation image", "logger": "pipeline.transcription", "level": "warning", "timestamp": "2025-07-12T00:32:04.054972Z"}
+[2025-07-12 00:32:04,070: INFO/ForkPoolWorker-1] {"event": "Generated text-based PDF", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.070008Z"}
+[2025-07-12 00:32:04,070: INFO/ForkPoolWorker-1] {"formats": ["musicxml", "midi", "pdf"], "event": "Export generation complete", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.070148Z"}
+[2025-07-12 00:32:04,071: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "status": "processing", "progress": 100, "stage": "completed", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.071306Z"}
+[2025-07-12 00:32:04,071: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "stage": "completed", "progress": 100, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.071391Z"}
+[2025-07-12 00:32:04,352: INFO/ForkPoolWorker-1] {"s3_key": "exports/b7bed0ca-5226-4a3a-9a64-ce7aff314426/20250712_003204_musicxml", "export_type": "musicxml", "event": "Export uploaded to S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.352742Z"}
+[2025-07-12 00:32:04,470: INFO/ForkPoolWorker-1] {"s3_key": "exports/b7bed0ca-5226-4a3a-9a64-ce7aff314426/20250712_003204_midi", "export_type": "midi", "event": "Export uploaded to S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.470759Z"}
+[2025-07-12 00:32:04,602: INFO/ForkPoolWorker-1] {"s3_key": "exports/b7bed0ca-5226-4a3a-9a64-ce7aff314426/20250712_003204_pdf", "export_type": "pdf", "event": "Export uploaded to S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.602336Z"}
+[2025-07-12 00:32:04,608: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "keys": {"musicxml": "exports/b7bed0ca-5226-4a3a-9a64-ce7aff314426/20250712_003204_musicxml", "midi": "exports/b7bed0ca-5226-4a3a-9a64-ce7aff314426/20250712_003204_midi", "pdf": "exports/b7bed0ca-5226-4a3a-9a64-ce7aff314426/20250712_003204_pdf"}, "event": "S3 export keys saved", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.607863Z"}
+[2025-07-12 00:32:04,613: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "status": "completed", "progress": 100, "stage": "completed", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.613302Z"}
+[2025-07-12 00:32:04,613: INFO/ForkPoolWorker-1] {"job_id": "b7bed0ca-5226-4a3a-9a64-ce7aff314426", "event": "Transcription completed successfully", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.613465Z"}
+[2025-07-12 00:32:04,615: INFO/ForkPoolWorker-1] {"file_path": "/tmp/tmpc9zfoufb.wav", "event": "Cleaned up temporary file", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:32:04.615315Z"}
+[2025-07-12 00:32:04,618: INFO/ForkPoolWorker-1] Task tasks.transcription.transcribe_drums_task[c28fb72c-e563-4da0-9b46-91eb80d809c5] succeeded in 12.584342421999963s: {'tempo': 13, 'time_signature': '4/4', 'duration_seconds': 62.08696145124716, 'accuracy_score': 0.75, 'exports': {'musicxml': b'<?xml version="1.0"?><score-partwise version="3.1">...</score-partwise>', 'midi': b'MThd      `MTrk...', 'pdf': b'255044462d312e330a25938c8b9e205265706f72744c61622047656e6572617465642050444620646f63756d656e7420687474703a2f2f7777772e7265706f72746c61622e636f6d0a312030206f626a0a3c3c0a2f4631203220302052202f46322033203020520a3e3e0a656e646f626a0a322030206f626a0a3c3c0a2f42617365466f6e74202f48656c766574696361202f456e636f64696e67202f57696e416e7369456e636f64696e67202f4e616d65202f4631202f53756274797065202f5479706531202f54797065202f466f6e740a3e3e0a656e646f626a0a332030206f626a0a3c3c0a2f42617365466f6e74202f48656c7665746963612d426f6c64202f456e636f64696e67202f57696e416e7369456e636f64696e67202f4e616d65202f4632202f53756274797065202f5479706531202f54797065202f466f6e740a3e3e0a656e646f626a0a342030206f626a0a3c3c0a2f436f6e74656e7473203820302052202f4d65646961426f78205b203020302036313220373932205d202f506172656e74203720302052202f5265736f7572636573203c3c0a2f466f6e74203120302052202f50726f63536574205b202f504446202f54657874202f496d61676542202f496d61676543202f496d61676549205d0a3e3e202f526f746174652030202f5472616e73203c3c0a0a3e3e200a20202f54797065202f506167650a3e3e0a656e646f626a0a352030206f626a0a3c3c0a2f506167654d6f6465202f5573654e6f6e65202f5061676573203720302052202f54797065202f436174616c6f670a3e3e0a656e646f626a0a362030206f626a0a3c3c0a2f417574686f722028616e6f6e796d6f757329202f4372656174696f6e446174652028443a32303235303731323030333230342b30302730302729202f43726561746f7220285265706f72744c616220504446204c696272617279202d207777772e7265706f72746c61622e636f6d29202f4b6579776f726473202829202f4d6f64446174652028443a32303235303731323030333230342b30302730302729202f50726f647563657220285265706f...', ...}
+
+worker: Warm shutdown (MainProcess)
+/usr/local/lib/python3.11/site-packages/celery/platforms.py:829: SecurityWarning: You're running the worker with superuser privileges: this is
+absolutely not recommended!
+
+Please specify a different user using the --uid option.
+
+User information: uid=0 euid=0 gid=0 egid=0
+
+  warnings.warn(SecurityWarning(ROOT_DISCOURAGED.format(
+ 
+ -------------- celery@7e7c085a10f0 v5.3.4 (emerald-rush)
+--- ***** ----- 
+-- ******* ---- Linux-6.10.14-linuxkit-aarch64-with-glibc2.36 2025-07-12 00:35:03
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         drum_transcription_worker:0xffff825cfc50
+- ** ---------- .> transport:   redis://redis:6379/0
+- ** ---------- .> results:     redis://redis:6379/0
+- *** --- * --- .> concurrency: 1 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> transcription    exchange=transcription(direct) key=transcription
+                
+
+[tasks]
+  . tasks.transcription.transcribe_drums_task
+
+[2025-07-12 00:35:03,609: WARNING/MainProcess] /usr/local/lib/python3.11/site-packages/celery/worker/consumer/consumer.py:507: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2025-07-12 00:35:03,612: INFO/MainProcess] Connected to redis://redis:6379/0
+[2025-07-12 00:35:03,612: WARNING/MainProcess] /usr/local/lib/python3.11/site-packages/celery/worker/consumer/consumer.py:507: CPendingDeprecationWarning: The broker_connection_retry configuration setting will no longer determine
+whether broker connection retries are made during startup in Celery 6.0 and above.
+If you wish to retain the existing behavior for retrying connections on startup,
+you should set broker_connection_retry_on_startup to True.
+  warnings.warn(
+
+[2025-07-12 00:35:03,614: INFO/MainProcess] mingle: searching for neighbors
+[2025-07-12 00:35:04,626: INFO/MainProcess] mingle: sync with 1 nodes
+[2025-07-12 00:35:04,627: INFO/MainProcess] mingle: sync complete
+[2025-07-12 00:35:04,639: INFO/MainProcess] celery@7e7c085a10f0 ready.
+[2025-07-12 00:37:25,712: INFO/MainProcess] Task tasks.transcription.transcribe_drums_task[238649e4-ad45-4aff-8e43-f3b3d2be86a9] received
+[2025-07-12 00:37:25,715: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "file_reference": "audio/4702f36f-7ee5-4e4c-947e-5c070ecf9c60/20250712_003723_cc8a380e_studio-drum-samples.wav", "event": "Starting drum transcription", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:25.715737Z"}
+[2025-07-12 00:37:25,716: INFO/ForkPoolWorker-1] {"s3_key": "audio/4702f36f-7ee5-4e4c-947e-5c070ecf9c60/20250712_003723_cc8a380e_studio-drum-samples.wav", "event": "Downloading file from S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:25.716756Z"}
+[2025-07-12 00:37:26,659: INFO/ForkPoolWorker-1] {"local_path": "/tmp/tmp5uigbxqm.wav", "event": "File downloaded from S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:26.659175Z"}
+[2025-07-12 00:37:26,659: INFO/ForkPoolWorker-1] {"event": "Attempting to initialize enhanced ML pipeline", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:26.659487Z"}
+[2025-07-12 00:37:26,659: INFO/ForkPoolWorker-1] {"event": "Initializing enhanced transcription pipeline", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:26.659718Z"}
+[2025-07-12 00:37:26,659: WARNING/ForkPoolWorker-1] {"error": "name 'torch' is not defined", "event": "Enhanced pipeline initialization failed, using basic pipeline", "logger": "tasks.transcription", "level": "warning", "timestamp": "2025-07-12T00:37:26.659865Z"}
+[2025-07-12 00:37:26,659: INFO/ForkPoolWorker-1] {"event": "Initializing transcription pipeline", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:26.659954Z"}
+[2025-07-12 00:37:26,683: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "status": "processing", "progress": 0, "stage": "validating", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:26.683645Z"}
+[2025-07-12 00:37:26,685: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "status": "processing", "progress": 10, "stage": "validating", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:26.685661Z"}
+[2025-07-12 00:37:26,685: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "stage": "validating", "progress": 10, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:26.685734Z"}
+[2025-07-12 00:37:26,685: INFO/ForkPoolWorker-1] {"file_path": "/tmp/tmp5uigbxqm.wav", "event": "Validating audio file", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:26.685805Z"}
+[2025-07-12 00:37:27,396: INFO/ForkPoolWorker-1] {"duration": 62.08696145124716, "sample_rate": 44100, "channels": 1, "event": "Audio validation complete", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:27.396145Z"}
+[2025-07-12 00:37:27,398: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "status": "processing", "progress": 30, "stage": "source_separation", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:27.398065Z"}
+[2025-07-12 00:37:27,398: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "stage": "source_separation", "progress": 30, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:27.398123Z"}
+[2025-07-12 00:37:27,398: INFO/ForkPoolWorker-1] {"event": "Starting drum separation", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:27.398165Z"}
+[2025-07-12 00:37:31,745: INFO/ForkPoolWorker-1] {"event": "Drum separation complete", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:31.745825Z"}
+[2025-07-12 00:37:31,747: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "status": "processing", "progress": 60, "stage": "transcribing", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:31.747438Z"}
+[2025-07-12 00:37:31,747: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "stage": "transcribing", "progress": 60, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:31.747494Z"}
+[2025-07-12 00:37:31,747: INFO/ForkPoolWorker-1] {"event": "Starting drum transcription", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:31.747539Z"}
+[2025-07-12 00:37:31,992: INFO/ForkPoolWorker-1] {"tempo": 13, "event": "Detected tempo", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:31.992900Z"}
+[2025-07-12 00:37:32,073: INFO/ForkPoolWorker-1] {"note_count": 15, "event": "Transcription complete", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.073938Z"}
+[2025-07-12 00:37:32,077: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "status": "processing", "progress": 85, "stage": "generating_exports", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.077203Z"}
+[2025-07-12 00:37:32,077: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "stage": "generating_exports", "progress": 85, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.077273Z"}
+[2025-07-12 00:37:32,077: INFO/ForkPoolWorker-1] {"event": "Generating export formats", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.077306Z"}
+[2025-07-12 00:37:32,079: ERROR/ForkPoolWorker-1] {"error": "cannot access local variable 'tempfile' where it is not associated with a value", "event": "Failed to generate MusicXML", "logger": "pipeline.transcription", "level": "error", "timestamp": "2025-07-12T00:37:32.078994Z"}
+[2025-07-12 00:37:32,079: ERROR/ForkPoolWorker-1] {"error": "cannot access local variable 'tempfile' where it is not associated with a value", "event": "Failed to generate MIDI", "logger": "pipeline.transcription", "level": "error", "timestamp": "2025-07-12T00:37:32.079075Z"}
+[2025-07-12 00:37:32,079: WARNING/ForkPoolWorker-1] {"error": "cannot support output in this format yet: png", "event": "Failed to generate notation image", "logger": "pipeline.transcription", "level": "warning", "timestamp": "2025-07-12T00:37:32.079540Z"}
+[2025-07-12 00:37:32,109: INFO/ForkPoolWorker-1] {"event": "Generated text-based PDF", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.109425Z"}
+[2025-07-12 00:37:32,109: INFO/ForkPoolWorker-1] {"formats": ["musicxml", "midi", "pdf"], "event": "Export generation complete", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.109574Z"}
+[2025-07-12 00:37:32,112: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "status": "processing", "progress": 100, "stage": "completed", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.112934Z"}
+[2025-07-12 00:37:32,113: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "stage": "completed", "progress": 100, "event": "Processing progress update", "logger": "pipeline.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.112994Z"}
+[2025-07-12 00:37:32,235: INFO/ForkPoolWorker-1] {"s3_key": "exports/88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f/20250712_003732_musicxml", "export_type": "musicxml", "event": "Export uploaded to S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.235043Z"}
+[2025-07-12 00:37:32,346: INFO/ForkPoolWorker-1] {"s3_key": "exports/88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f/20250712_003732_midi", "export_type": "midi", "event": "Export uploaded to S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.346249Z"}
+[2025-07-12 00:37:32,463: INFO/ForkPoolWorker-1] {"s3_key": "exports/88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f/20250712_003732_pdf", "export_type": "pdf", "event": "Export uploaded to S3", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.463262Z"}
+[2025-07-12 00:37:32,467: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "keys": {"musicxml": "exports/88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f/20250712_003732_musicxml", "midi": "exports/88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f/20250712_003732_midi", "pdf": "exports/88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f/20250712_003732_pdf"}, "event": "S3 export keys saved", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.467599Z"}
+[2025-07-12 00:37:32,472: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "status": "completed", "progress": 100, "stage": "completed", "event": "Published progress", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.472110Z"}
+[2025-07-12 00:37:32,472: INFO/ForkPoolWorker-1] {"job_id": "88e98b7c-5e6a-4ff9-a6b2-148fd6e0090f", "event": "Transcription completed successfully", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.472280Z"}
+[2025-07-12 00:37:32,474: INFO/ForkPoolWorker-1] {"file_path": "/tmp/tmp5uigbxqm.wav", "event": "Cleaned up temporary file", "logger": "tasks.transcription", "level": "info", "timestamp": "2025-07-12T00:37:32.474304Z"}
+[2025-07-12 00:37:32,477: INFO/ForkPoolWorker-1] Task tasks.transcription.transcribe_drums_task[238649e4-ad45-4aff-8e43-f3b3d2be86a9] succeeded in 6.762779711000121s: {'tempo': 13, 'time_signature': '4/4', 'duration_seconds': 62.08696145124716, 'accuracy_score': 0.75, 'exports': {'musicxml': b'<?xml version="1.0"?><score-partwise version="3.1">...</score-partwise>', 'midi': b'MThd      `MTrk...', 'pdf': b'255044462d312e330a25938c8b9e205265706f72744c61622047656e6572617465642050444620646f63756d656e7420687474703a2f2f7777772e7265706f72746c61622e636f6d0a312030206f626a0a3c3c0a2f4631203220302052202f46322033203020520a3e3e0a656e646f626a0a322030206f626a0a3c3c0a2f42617365466f6e74202f48656c766574696361202f456e636f64696e67202f57696e416e7369456e636f64696e67202f4e616d65202f4631202f53756274797065202f5479706531202f54797065202f466f6e740a3e3e0a656e646f626a0a332030206f626a0a3c3c0a2f42617365466f6e74202f48656c7665746963612d426f6c64202f456e636f64696e67202f57696e416e7369456e636f64696e67202f4e616d65202f4632202f53756274797065202f5479706531202f54797065202f466f6e740a3e3e0a656e646f626a0a342030206f626a0a3c3c0a2f436f6e74656e7473203820302052202f4d65646961426f78205b203020302036313220373932205d202f506172656e74203720302052202f5265736f7572636573203c3c0a2f466f6e74203120302052202f50726f63536574205b202f504446202f54657874202f496d61676542202f496d61676543202f496d61676549205d0a3e3e202f526f746174652030202f5472616e73203c3c0a0a3e3e200a20202f54797065202f506167650a3e3e0a656e646f626a0a352030206f626a0a3c3c0a2f506167654d6f6465202f5573654e6f6e65202f5061676573203720302052202f54797065202f436174616c6f670a3e3e0a656e646f626a0a362030206f626a0a3c3c0a2f417574686f722028616e6f6e796d6f757329202f4372656174696f6e446174652028443a32303235303731323030333733322b30302730302729202f43726561746f7220285265706f72744c616220504446204c696272617279202d207777772e7265706f72746c61622e636f6d29202f4b6579776f726473202829202f4d6f64446174652028443a32303235303731323030333733322b30302730302729202f50726f647563657220285265706f...', ...}
+
+worker: Warm shutdown (MainProcess)

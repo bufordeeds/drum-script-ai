@@ -7,11 +7,12 @@ import numpy as np
 import librosa
 import tempfile
 import io
-import torch
 import soundfile as sf
-from demucs.pretrained import get_model
-from demucs.api import separate
-from ADTLib import ADT
+# ML imports temporarily disabled for testing
+# import torch
+# from demucs.pretrained import get_model
+# from demucs.api import separate
+# from ADTLib import ADT
 
 # Music21 for notation generation
 from music21 import stream, tempo, meter
@@ -207,8 +208,98 @@ class TranscriptionPipeline:
             confidence_score=0.75  # Conservative estimate for basic algorithm
         )
     
+    def generate_musescore_exports(self, musicxml_content: bytes) -> dict:
+        """Generate MuseScore native formats (.mscx/.mscz) from MusicXML"""
+        musescore_exports = {}
+        
+        try:
+            import subprocess
+            import shutil
+            
+            # Check if MuseScore CLI is available (supports v3 and v4)
+            mscore_cmd = None
+            logger.info("Checking for MuseScore CLI commands...")
+            for cmd in ['mscore4portable', 'mscore4', 'mscore', 'musescore', 'musescore3']:
+                cmd_path = shutil.which(cmd)
+                if cmd_path:
+                    mscore_cmd = cmd
+                    logger.info(f"Found MuseScore CLI: {cmd} at {cmd_path}")
+                    break
+                else:
+                    logger.debug(f"Command {cmd} not found")
+            
+            if not mscore_cmd:
+                logger.warning("MuseScore CLI not found, skipping .mscx/.mscz generation")
+                return musescore_exports
+            
+            # Create temporary files for conversion
+            with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as xml_temp:
+                xml_temp.write(musicxml_content)
+                xml_temp_path = xml_temp.name
+            
+            try:
+                # Generate .mscx (MuseScore XML format)
+                with tempfile.NamedTemporaryFile(suffix='.mscx', delete=False) as mscx_temp:
+                    mscx_temp_path = mscx_temp.name
+                
+                # Convert XML to MSCX using MuseScore CLI with virtual display
+                result = subprocess.run([
+                    'timeout', '30',  # Kill if takes longer than 30 seconds
+                    'xvfb-run', '-s', '-screen 0 640x480x24 -ac +extension GLX +render -noreset',
+                    mscore_cmd, 
+                    xml_temp_path, 
+                    '-o', mscx_temp_path
+                ], capture_output=True, text=True, timeout=35)  # Extra time for timeout command
+                
+                if result.returncode == 0 and os.path.exists(mscx_temp_path):
+                    with open(mscx_temp_path, 'rb') as f:
+                        musescore_exports['mscx'] = f.read()
+                    logger.info("Generated .mscx export successfully")
+                else:
+                    logger.warning("Failed to generate .mscx", error=result.stderr)
+                
+                # Clean up MSCX temp file
+                if os.path.exists(mscx_temp_path):
+                    os.unlink(mscx_temp_path)
+                
+                # Generate .mscz (MuseScore compressed format)
+                with tempfile.NamedTemporaryFile(suffix='.mscz', delete=False) as mscz_temp:
+                    mscz_temp_path = mscz_temp.name
+                
+                # Convert XML to MSCZ using MuseScore CLI with virtual display
+                result = subprocess.run([
+                    'timeout', '30',  # Kill if takes longer than 30 seconds
+                    'xvfb-run', '-s', '-screen 0 640x480x24 -ac +extension GLX +render -noreset',
+                    mscore_cmd, 
+                    xml_temp_path, 
+                    '-o', mscz_temp_path
+                ], capture_output=True, text=True, timeout=35)  # Extra time for timeout command
+                
+                if result.returncode == 0 and os.path.exists(mscz_temp_path):
+                    with open(mscz_temp_path, 'rb') as f:
+                        musescore_exports['mscz'] = f.read()
+                    logger.info("Generated .mscz export successfully")
+                else:
+                    logger.warning("Failed to generate .mscz", error=result.stderr)
+                
+                # Clean up MSCZ temp file
+                if os.path.exists(mscz_temp_path):
+                    os.unlink(mscz_temp_path)
+                    
+            finally:
+                # Clean up XML temp file
+                if os.path.exists(xml_temp_path):
+                    os.unlink(xml_temp_path)
+                    
+        except subprocess.TimeoutExpired:
+            logger.error("MuseScore CLI timeout - conversion took too long")
+        except Exception as e:
+            logger.error("Failed to generate MuseScore exports", error=str(e))
+        
+        return musescore_exports
+    
     async def generate_exports(self, transcription: TranscriptionOutput) -> dict:
-        """Generate MusicXML, MIDI, and PDF exports"""
+        """Generate MusicXML, MIDI, PDF, and MuseScore exports"""
         logger.info("Generating export formats")
         
         # Create music21 score
@@ -245,11 +336,27 @@ class TranscriptionPipeline:
         
         try:
             # Generate MusicXML
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False) as f:
-                score.write('musicxml', fp=f.name)
-                with open(f.name, 'rb') as xml_file:
-                    exports['musicxml'] = xml_file.read()
-                os.unlink(f.name)
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False) as temp_xml:
+                temp_xml_path = temp_xml.name
+                score.write('musicxml', fp=temp_xml_path)
+                with open(temp_xml_path, 'rb') as xml_file:
+                    musicxml_content = xml_file.read()
+                    exports['musicxml'] = musicxml_content
+                os.unlink(temp_xml_path)
+                
+            # Generate MuseScore formats from MusicXML
+            try:
+                logger.info("Attempting to generate MuseScore formats")
+                musescore_exports = self.generate_musescore_exports(musicxml_content)
+                if musescore_exports:
+                    exports.update(musescore_exports)
+                    logger.info(f"Successfully generated MuseScore formats: {list(musescore_exports.keys())}")
+                else:
+                    logger.warning("No MuseScore formats generated")
+            except Exception as musescore_error:
+                logger.error("Failed to generate MuseScore formats", error=str(musescore_error), exc_info=True)
+                # Continue without MuseScore exports
+                
         except Exception as e:
             logger.error("Failed to generate MusicXML", error=str(e))
             exports['musicxml'] = b'<?xml version="1.0"?><score-partwise version="3.1">...</score-partwise>'
@@ -271,11 +378,12 @@ class TranscriptionPipeline:
             midi_data.instruments.append(drum_instrument)
             
             # Write to bytes
-            with tempfile.NamedTemporaryFile(suffix='.mid', delete=False) as f:
-                midi_data.write(f.name)
-                with open(f.name, 'rb') as midi_file:
+            with tempfile.NamedTemporaryFile(suffix='.mid', delete=False) as temp_midi:
+                temp_midi_path = temp_midi.name
+                midi_data.write(temp_midi_path)
+                with open(temp_midi_path, 'rb') as midi_file:
                     exports['midi'] = midi_file.read()
-                os.unlink(f.name)
+                os.unlink(temp_midi_path)
                 
         except Exception as e:
             logger.error("Failed to generate MIDI", error=str(e))

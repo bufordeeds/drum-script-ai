@@ -62,6 +62,8 @@ export interface JobResultResponse {
     musicxml: string
     midi: string
     pdf: string
+    mscx: string
+    mscz: string
   }
 }
 

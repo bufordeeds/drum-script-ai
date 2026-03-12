@@ -148,8 +148,8 @@ def monitor_job(job_id):
     return False
 
 def test_exports(job_id):
-    """Test downloading export files"""
-    formats = ['musicxml', 'midi', 'pdf']
+    """Test downloading export files including new MuseScore formats"""
+    formats = ['musicxml', 'midi', 'pdf', 'mscx', 'mscz']
     results = {}
     
     for format_type in formats:
@@ -181,7 +181,9 @@ def cleanup_test_files():
         "test_drum_pattern.wav",
         "test_export.musicxml",
         "test_export.midi", 
-        "test_export.pdf"
+        "test_export.pdf",
+        "test_export.mscx",
+        "test_export.mscz"
     ]
     
     for file_path in test_files:
@@ -248,7 +250,9 @@ def main():
         ("Processing", True),  # If we got here, processing worked
         ("MusicXML Export", export_results.get('musicxml', False)),
         ("MIDI Export", export_results.get('midi', False)),
-        ("PDF Export", export_results.get('pdf', False))
+        ("PDF Export", export_results.get('pdf', False)),
+        ("MuseScore XML Export", export_results.get('mscx', False)),
+        ("MuseScore ZIP Export", export_results.get('mscz', False))
     ]
     
     for test_name, passed in tests:

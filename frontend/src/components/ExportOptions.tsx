@@ -31,6 +31,10 @@ export default function ExportOptions({ job }: ExportOptionsProps) {
     }
   }
 
+  // Debug: Log what we're getting from the API
+  console.log('Job Result:', jobResult)
+  console.log('Download URLs:', jobResult?.downloadUrls)
+
   const exportOptions = [
     {
       format: 'pdf',
@@ -57,13 +61,35 @@ export default function ExportOptions({ job }: ExportOptionsProps) {
     {
       format: 'musicxml',
       name: 'MusicXML',
-      description: 'For MuseScore, Sibelius',
+      description: 'Universal format',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
         </svg>
       ),
       color: 'bg-green-500 hover:bg-green-600'
+    },
+    {
+      format: 'mscx',
+      name: 'MuseScore (XML)',
+      description: 'Native MuseScore format',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-.895 2-2 2s-2-.895-2-2 .895-2 2-2 2 .895 2 2zm12-3c0 1.105-.895 2-2 2s-2-.895-2-2 .895-2 2-2 2 .895 2 2zM9 10h1m4-6h1" />
+        </svg>
+      ),
+      color: 'bg-purple-500 hover:bg-purple-600'
+    },
+    {
+      format: 'mscz',
+      name: 'MuseScore (Compressed)',
+      description: 'Compressed MuseScore',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-.895 2-2 2s-2-.895-2-2 .895-2 2-2 2 .895 2 2zm12-3c0 1.105-.895 2-2 2s-2-.895-2-2 .895-2 2-2 2 .895 2 2zM20 12V8" />
+        </svg>
+      ),
+      color: 'bg-indigo-500 hover:bg-indigo-600'
     }
   ]
 
@@ -73,7 +99,7 @@ export default function ExportOptions({ job }: ExportOptionsProps) {
         Export Options
       </h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {exportOptions.map((option) => (
           <div key={option.format} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center space-x-3 mb-3">
@@ -88,10 +114,10 @@ export default function ExportOptions({ job }: ExportOptionsProps) {
             
             <button
               onClick={() => handleDownload(option.format)}
-              disabled={!jobResult?.downloadUrls || downloading === option.format}
+              disabled={!jobResult?.downloadUrls || !jobResult?.downloadUrls[option.format] || downloading === option.format}
               className={`
                 w-full flex items-center justify-center space-x-2 py-2 px-4 rounded-md text-sm font-medium
-                ${jobResult?.downloadUrls
+                ${jobResult?.downloadUrls && jobResult?.downloadUrls[option.format]
                   ? `${option.color} text-white focus:outline-none focus:ring-2 focus:ring-offset-2`
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }
@@ -120,7 +146,9 @@ export default function ExportOptions({ job }: ExportOptionsProps) {
         <ul className="text-sm text-blue-700 space-y-1">
           <li>• PDF: Ready-to-print drum notation</li>
           <li>• MIDI: Compatible with all major DAWs</li>
-          <li>• MusicXML: Import into notation software</li>
+          <li>• MusicXML: Universal format for notation software</li>
+          <li>• MuseScore (XML): Native MuseScore 4.x format</li>
+          <li>• MuseScore (Compressed): Smaller file size for sharing</li>
         </ul>
       </div>
     </div>

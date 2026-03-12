@@ -249,11 +249,13 @@ async def get_job_result(
             status=JobStatus(job.status)
         )
     
-    # TODO: Generate actual download URLs from S3
+    # Generate download URLs (includes new MuseScore formats)
     download_urls = {
         "musicxml": f"/api/v1/export/musicxml/{job_id}",
         "midi": f"/api/v1/export/midi/{job_id}",
-        "pdf": f"/api/v1/export/pdf/{job_id}"
+        "pdf": f"/api/v1/export/pdf/{job_id}",
+        "mscx": f"/api/v1/export/mscx/{job_id}",
+        "mscz": f"/api/v1/export/mscz/{job_id}"
     }
     
     return JobResultResponse(
