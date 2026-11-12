@@ -29,3 +29,22 @@ One line per judgment call, newest at the bottom.
 - ADTOF is called through its model + filterbank classes directly (in-memory audio) rather than its file-based helper; peak picking and thresholds are the package defaults.
 - Eval fixtures are generated in code (grooves with fills, 16th hats, a shuffle, a tempo-drift song) and rendered with FluidSynth + FluidR3_GM. The mp3s are committed (2.6 MB) so tests and the first manual upload need no extra tools.
 - Pooled F1 = micro-average over all classes (sum of TP/FP/FN), one-to-one matching within ±50 ms via mir_eval.
+- Backend: `app.models` was missing from git (a blanket `models/` ignore rule), so the API could never start from a clone. Rebuilt as a single `app/models.py`; ignore rules for `models/` and `lib/` are now anchored (the `lib/` rule was also hiding `frontend/src/lib`).
+- Dropped the `backend_worker` hop (it only forwarded the task), the S3 paths, the MuseScore/PDF exports and the demo-user table: none are needed for the test loop and each was a way for `docker compose up` to fail. Results are files on a shared volume; Postgres holds only job rows and a small summary.
+- Tables come from SQLAlchemy `create_all` (job status is a plain string); `database/init.sql` with its PG enums duplicated the models and is removed.
+- Job status in the UI is polled once a second; the Redis-pub/sub websocket endpoint is kept but unused by the frontend.
+- No automatic Celery retry: a failed transcription fails once with a readable message instead of re-running Demucs three times.
+- Worker runs `--pool=solo` (one job at a time, PyTorch uses all cores) and preloads/warms all three models at startup.
+- Progress during separation is a time-based estimate (Demucs 4.0.1 has no progress callback); it only reaches the next stage when separation really finishes.
+- Dependencies in both images are pinned to the exact versions that were run here (first attempt with older Celery/redis-py pins crashed the worker on a kombu version check).
+- Frontend: removed axios, react-query, react-dropzone, react-hook-form and VexFlow (unused after the rewrite); routing is a 20-line hash router so a job URL survives reload.
+- Verovio renders the whole chart as one tall page that re-flows to the window width; the cursor is interpolated between note positions taken from Verovio's timemap (`qstamp`), and quarter positions are mapped to audio time through the beats in hits.json, so the cursor follows tempo drift.
+- Player reads mix and drums from one shared position instead of running two players: toggling just switches which buffer is read, so they cannot drift.
+- Click track is synthesised after the time-stretcher at the detected beat times (not mixed in before it), so it stays sharp at 50 %.
+- Count-in plays when Play is pressed with a loop set, not on every repeat (repeats are seamless).
+- **Time-stretch: neither Rubber Band nor SoundTouchJS in the end.** SoundTouchJS was integrated first and measured: at 50 % it turned 76 drum onsets into 185 with its default settings (104 with the best stable settings), and many parameter combinations output NaN (silence), which is sample-rate dependent and therefore a gamble on other machines. Rubber Band's WASM builds are GPL and its real-time mode does not give the exact source-position mapping the cursor and click rely on. Replaced with ~150 lines in `frontend/src/lib/stretch.ts`: cut at the known hit times, copy each attack 1:1, WSOLA only the tails. Measured: no NaNs at 44.1/48 kHz, exact length, strong hits 18/18 preserved once each at 50 %. Trade-off: sustained instruments are grainy when slowed (see TESTING.md).
+- Stretcher grain settings (80 ms grain, 20 ms cross-fade, ±15 ms search) were picked from a small tone-purity test and then left alone.
+- ADTOF is fed the Demucs drum stem, not the mix: 0.838 vs 0.792 pooled F1 on MDB Drums.
+- ENST-Drums skipped: openly downloadable but 9.6 GB at ~1 MB/s with not enough disk in the sandbox. MDB Drums (23 real tracks) is the real-music benchmark instead.
+- Upload limit 100 MB / 12 minutes; accepted types mp3, wav, m4a, flac (ffmpeg decodes them all; the brief only required mp3/wav).
+- `tests/e2e` scripts are kept as plain Node files run by hand rather than wired into a test runner: they need the Compose stack up.
