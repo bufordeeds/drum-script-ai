@@ -78,7 +78,8 @@ uploads/
 *.m4a
 
 # ML Models
-models/
+/models/
+ml_worker/models/
 *.pkl
 *.pth
 *.h5
@@ -111,3 +112,10 @@ dump.rdb
 .DS_Store
 
 dns-records.txt
+# DrumScript eval / local outputs
+eval/work/
+*_transcription/
+data/
+
+# committed test fixtures
+!eval/fixtures/*.mp3
