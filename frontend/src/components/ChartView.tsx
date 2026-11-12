@@ -61,7 +61,7 @@ export default function ChartView({ jobId, result }: Props) {
           loadAudio(ctx, fileUrl(jobId, 'drums')),
         ])
         if (cancelled) return
-        created = new PlayerEngine(ctx, mix, drums, grid.clickBeats(), grid.perBar)
+        created = new PlayerEngine(ctx, mix, drums, grid.clickBeats(), grid.perBar, doc!.hits.map((h) => h.time_s))
         created.onEnded = () => setPlaying(false)
         ;(window as any).__engine = created // handy for debugging / automated tests
         setEngine(created)
@@ -75,7 +75,7 @@ export default function ChartView({ jobId, result }: Props) {
       created?.destroy()
       ctx.close().catch(() => undefined)
     }
-  }, [jobId, grid])
+  }, [jobId, grid, doc])
 
   // cursor + clock, driven by the audio position
   useEffect(() => {
