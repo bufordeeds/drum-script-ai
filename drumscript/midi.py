@@ -32,7 +32,7 @@ def to_midi(doc: dict, quantized: bool = False) -> mido.MidiFile:
     last = None
     pending = 0
     for k in range(len(g) - 1):
-        tempo = int(round((g[k + 1] - g[k]) * 1e6))
+        tempo = int(np.clip(round((g[k + 1] - g[k]) * 1e6), 1, 0xFFFFFF))  # MIDI tempo is 24-bit
         if tempo != last:
             meta.append(mido.MetaMessage("set_tempo", tempo=tempo, time=pending))
             pending, last = 0, tempo

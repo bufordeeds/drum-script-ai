@@ -28,10 +28,11 @@ def _clean_beats(beats, duration: float) -> np.ndarray:
     med = float(np.median(np.diff(b)))
     out = [b[0]]
     for nxt in b[1:]:
-        n = int(round((nxt - out[-1]) / med))
+        prev = out[-1]
+        n = int(round((nxt - prev) / med))
         if n >= 2:
-            step = (nxt - out[-1]) / n
-            out.extend(out[-1] + step * i for i in range(1, n))
+            step = (nxt - prev) / n
+            out.extend([prev + step * i for i in range(1, n)])
         out.append(nxt)
     return np.asarray(out)
 

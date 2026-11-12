@@ -67,6 +67,17 @@ def test_missing_beats_are_filled():
     assert bars[0]["beats"] == [0.0, 0.5, 1.0, 1.5]
 
 
+def test_long_gap_in_beats_is_filled_evenly():
+    # tracker lost the beat for 6 s (e.g. a drumless break): the grid must stay monotonic and evenly spaced
+    beats = [0.0, 0.5, 1.0, 1.5, 2.0] + [8.0 + 0.5 * i for i in range(9)]
+    doc = apply_grid({"source": {"duration_s": 12.0}, "beats": beats, "downbeats": [0.0, 2.0, 8.0, 10.0, 12.0],
+                      "hits": [hit(0.0, "kick"), hit(11.5)]})
+    flat = [b for bar in doc["bars"] for b in bar["beats"]] + [doc["bars"][-1]["end_s"]]
+    gaps = [b - a for a, b in zip(flat, flat[1:])]
+    assert min(gaps) > 0.45 and max(gaps) < 0.55
+    to_midi(doc)  # used to overflow the MIDI tempo field
+
+
 def test_no_beats_falls_back_to_120():
     doc = apply_grid({"source": {"duration_s": 4.0}, "beats": [], "downbeats": [], "hits": [hit(0.5)]})
     assert doc["tempo_bpm"] == 120 and doc["hits"][0]["beat"] == 2.0
