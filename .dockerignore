@@ -1,0 +1,9 @@
+.git
+**/node_modules
+**/dist
+**/__pycache__
+eval/work
+audio
+docs
+frontend
+*.md

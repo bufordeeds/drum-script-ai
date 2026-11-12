@@ -19,7 +19,7 @@ ml = [
   "demucs==4.0.1",
   "beat-this==1.1.0",
   "librosa",
-  "adtof-pytorch @ git+https://github.com/xavriley/ADTOF-pytorch@85c192e",
+  "adtof-pytorch @ git+https://github.com/xavriley/ADTOF-pytorch@85c192e78f716ea0b111cc8a5ee4a8f6a3a4f8a9",
 ]
 eval = ["mir_eval", "pretty_midi"]
 

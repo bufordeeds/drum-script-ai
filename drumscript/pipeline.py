@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import logging
+import math
+import threading
 import time
 from pathlib import Path
 from typing import Callable
@@ -26,6 +28,36 @@ MIX_AUDIO = "mix.flac"
 DRUMS_AUDIO = "drums.flac"
 
 Progress = Callable[[str, int], None]
+
+
+class _Ticker:
+    """Demucs gives no progress callback, so report an estimate while it runs:
+    the bar eases from `lo` towards `hi` and only reaches `hi` when the step really finishes."""
+
+    def __init__(self, report: Callable[[int], None], lo: int, hi: int, expected_s: float, every_s: float = 2.0):
+        self.report, self.lo, self.hi, self.expected, self.every = report, lo, hi, max(expected_s, 1.0), every_s
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def _run(self) -> None:
+        t0, last = time.time(), self.lo
+        while not self._stop.wait(self.every):
+            frac = 1 - math.exp(-1.5 * (time.time() - t0) / self.expected)
+            pct = int(self.lo + (self.hi - self.lo) * frac)
+            if pct > last:
+                last = pct
+                try:
+                    self.report(pct)
+                except Exception:  # noqa: BLE001 - progress must never break the job
+                    pass
+
+    def __enter__(self):
+        self._thread.start()
+        return self
+
+    def __exit__(self, *exc):
+        self._stop.set()
+        self._thread.join(timeout=5)
 
 
 def write_exports(doc: dict, out_dir: str | Path, title: str | None = None, midi_quantized: bool = False) -> dict:
@@ -69,7 +101,8 @@ def run(audio_path: str | Path, out_dir: str | Path, *, progress: Progress | Non
     t = time.time()
     if separation:
         step("separating_drums", 8)
-        drums = sep_mod.separate_drums(mix, SAMPLE_RATE)
+        with _Ticker(lambda pct: progress and progress("separating_drums", pct), 8, 62, expected_s=0.7 * duration + 5):
+            drums = sep_mod.separate_drums(mix, SAMPLE_RATE)
     else:
         drums = mix
     write_audio(out / DRUMS_AUDIO, drums)
