@@ -1,122 +1,72 @@
+# DrumScript — `docker compose up --build` then open http://localhost:3000
 services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    environment:
-      - VITE_API_URL=http://localhost:8000
     depends_on:
       - backend
-    networks:
-      - drumscript
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://drumuser:drumpass@postgres:5432/drumtranscribe
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - SECRET_KEY=your-secret-key-change-in-production
-      # AWS S3 Configuration (optional - set in .env file)
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
-      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
-      - AWS_REGION=${AWS_REGION:-us-east-1}
+    environment: &app_env
+      DATABASE_URL: postgresql://drumuser:drumpass@postgres:5432/drumtranscribe
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      DATA_DIR: /data
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
-      - ./backend:/app
-      - upload_data:/app/uploads
-    networks:
-      - drumscript
-
-  backend_worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    command: ["celery", "-A", "app.tasks.transcription", "worker", "--loglevel=info", "--concurrency=1", "--queues=backend"]
-    environment:
-      - DATABASE_URL=postgresql://drumuser:drumpass@postgres:5432/drumtranscribe
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - SECRET_KEY=your-secret-key-change-in-production
-      # AWS S3 Configuration (optional - set in .env file)
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
-      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
-      - AWS_REGION=${AWS_REGION:-us-east-1}
-    depends_on:
-      - postgres
-      - redis
-    volumes:
-      - ./backend:/app
-      - upload_data:/app/uploads
-    networks:
-      - drumscript
+      - job_data:/data
 
   ml_worker:
     build:
-      context: ./ml_worker
-      dockerfile: Dockerfile
-    command: ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "--concurrency=1", "--queues=transcription"]
+      context: .
+      dockerfile: ml_worker/Dockerfile
     environment:
-      - DATABASE_URL=postgresql://drumuser:drumpass@postgres:5432/drumtranscribe
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      # AWS S3 Configuration (optional - set in .env file)
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
-      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
-      - AWS_REGION=${AWS_REGION:-us-east-1}
+      <<: *app_env
+      # Optional: alternative download URL for the Demucs htdemucs checkpoint (sha256 is verified)
+      DRUMSCRIPT_DEMUCS_MIRROR: ${DRUMSCRIPT_DEMUCS_MIRROR:-https://huggingface.co/anchor-flux/demucs-htdemucs/resolve/main/htdemucs.th}
     depends_on:
-      - redis
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
-      - ./ml_worker:/app
-      - upload_data:/app/uploads
-      - model_cache:/app/models
-    networks:
-      - drumscript
+      - job_data:/data
+      - model_cache:/models   # model weights are downloaded once (~250 MB) and kept here
 
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_DB=drumtranscribe
-      - POSTGRES_USER=drumuser
-      - POSTGRES_PASSWORD=drumpass
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: drumtranscribe
+      POSTGRES_USER: drumuser
+      POSTGRES_PASSWORD: drumpass
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - drumscript
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drumuser -d drumtranscribe"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - drumscript
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
 volumes:
   postgres_data:
-  redis_data:
-  upload_data:
+  job_data:
   model_cache:
-
-networks:
-  drumscript:
-    driver: bridge

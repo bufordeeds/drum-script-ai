@@ -1,27 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
 
-// https://vitejs.dev/config/
+// `npm run dev` proxies the API to a locally running backend (override with VITE_PROXY_TARGET).
+const target = process.env.VITE_PROXY_TARGET || 'http://localhost:8000'
+
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
   server: {
     port: 3000,
     host: true,
     proxy: {
-      '/api': {
-        target: 'http://backend:8000',
-        changeOrigin: true,
-      },
-      '/ws': {
-        target: 'ws://backend:8000',
-        ws: true,
-      },
+      '/api': { target, changeOrigin: true },
+      '/ws': { target: target.replace(/^http/, 'ws'), ws: true },
     },
   },
+  build: { chunkSizeWarningLimit: 9000 },
 })

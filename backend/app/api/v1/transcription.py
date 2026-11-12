@@ -1,295 +1,121 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks
-from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-import structlog
-import os
+import re
+import shutil
 import uuid
-from datetime import datetime
-import magic
-import aiofiles
+from pathlib import Path
 
-from app.core.database import get_db
-from app.models import User, TranscriptionJob
-# Job status constants
-JOB_STATUS_PENDING = 'pending'
-JOB_STATUS_UPLOADING = 'uploading' 
-JOB_STATUS_VALIDATING = 'validating'
-JOB_STATUS_PROCESSING = 'processing'
-JOB_STATUS_COMPLETED = 'completed'
-JOB_STATUS_ERROR = 'error'
-from app.schemas.transcription import (
-    FileUploadResponse, 
-    JobStatusResponse, 
-    JobResultResponse,
-    JobStatus
-)
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.config import settings
-from app.tasks.transcription import celery_app
-from app.services.s3 import s3_service
+from app.core.database import get_db
+from app.models import STATUS_COMPLETED, TranscriptionJob
+from app.queue import enqueue_transcription
+from app.schemas.transcription import JobResponse, JobResultResponse
 
 router = APIRouter()
-logger = structlog.get_logger()
+
+# name in the URL -> (file on disk, media type, download extension)
+RESULT_FILES = {
+    "hits": ("hits.json", "application/json", ".hits.json"),
+    "musicxml": ("score.musicxml", "application/vnd.recordare.musicxml+xml", ".musicxml"),
+    "midi": ("score.mid", "audio/midi", ".mid"),
+    "mix": ("mix.flac", "audio/flac", ".mix.flac"),
+    "drums": ("drums.flac", "audio/flac", ".drums.flac"),
+}
 
 
-# TODO: Replace with proper auth
-async def get_current_user(db: AsyncSession) -> User:
-    """Temporary user getter - replace with proper auth"""
-    # For now, create or get a demo user
-    result = await db.execute(
-        select(User).where(User.email == "demo@example.com")
-    )
-    user = result.scalar_one_or_none()
-    
-    if not user:
-        user = User(email="demo@example.com")
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-    
-    return user
+def job_dir(job_id: uuid.UUID) -> Path:
+    return Path(settings.DATA_DIR) / "jobs" / str(job_id)
 
 
-def validate_audio_file(file: UploadFile) -> None:
-    """Validate uploaded audio file"""
-    # Check file size
-    if file.size > settings.MAX_UPLOAD_SIZE:
-        raise HTTPException(
-            status_code=413,
-            detail=f"File too large. Maximum size is {settings.MAX_UPLOAD_SIZE / 1024 / 1024}MB"
-        )
-    
-    # Check file extension
-    file_ext = file.filename.split('.')[-1].lower()
-    if file_ext not in settings.ALLOWED_AUDIO_FORMATS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid file format. Allowed formats: {', '.join(settings.ALLOWED_AUDIO_FORMATS)}"
-        )
-    
-    # TODO: Add magic number validation for actual file type
-
-
-@router.post("/upload", response_model=FileUploadResponse)
-async def upload_audio(
-    background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db)
-):
-    """Upload audio file for transcription"""
-    try:
-        # Validate file
-        validate_audio_file(file)
-        
-        # Get current user
-        current_user = await get_current_user(db)
-        
-        # Create job record
-        job = TranscriptionJob(
-            user_id=current_user.id,
-            filename=file.filename,
-            file_size_bytes=file.size,
-            status=JOB_STATUS_UPLOADING
-        )
-        db.add(job)
-        await db.commit()
-        await db.refresh(job)
-        
-        # Read file content
-        content = await file.read()
-        
-        # Try S3 upload first, fallback to local storage
-        s3_key = None
-        file_path = None
-        
-        if s3_service.is_configured():
-            try:
-                # Generate S3 key for audio file
-                s3_key = s3_service.generate_file_key(
-                    prefix="audio",
-                    filename=file.filename,
-                    user_id=str(current_user.id)
-                )
-                
-                # Upload to S3
-                import io
-                file_stream = io.BytesIO(content)
-                s3_url = await s3_service.upload_file(
-                    file_data=file_stream,
-                    key=s3_key,
-                    content_type=file.content_type,
-                    metadata={
-                        'user_id': str(current_user.id),
-                        'job_id': str(job.id),
-                        'original_filename': file.filename
-                    }
-                )
-                
-                if s3_url:
-                    # Update job with S3 key
-                    job.s3_audio_key = s3_key
-                    logger.info("File uploaded to S3", job_id=str(job.id), s3_key=s3_key)
-                else:
-                    raise Exception("S3 upload returned None")
-                    
-            except Exception as e:
-                logger.warning("S3 upload failed, falling back to local storage", 
-                             error=str(e), job_id=str(job.id))
-                s3_key = None
-        
-        # Fallback to local storage if S3 failed or not configured
-        if not s3_key:
-            os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-            file_path = os.path.join(settings.UPLOAD_DIR, f"{job.id}_{file.filename}")
-            
-            async with aiofiles.open(file_path, 'wb') as f:
-                await f.write(content)
-            
-            logger.info("File saved locally", job_id=str(job.id), file_path=file_path)
-        
-        # Update job status
-        job.status = JOB_STATUS_PENDING
-        await db.commit()
-        
-        # Queue processing task with appropriate file reference
-        file_reference = s3_key if s3_key else file_path
-        celery_app.send_task(
-            'app.tasks.transcription.process_audio_task',
-            args=[str(job.id), str(current_user.id), file_reference],
-            queue='backend'
-        )
-        
-        logger.info(
-            "File uploaded successfully",
-            job_id=str(job.id),
-            user_id=str(current_user.id),
-            filename=file.filename
-        )
-        
-        return FileUploadResponse(
-            job_id=job.id,
-            message="File uploaded successfully. Processing will begin shortly.",
-            status=JobStatus.PENDING
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error("File upload failed", error=str(e))
-        raise HTTPException(status_code=500, detail="File upload failed")
-
-
-@router.get("/jobs/{job_id}", response_model=JobStatusResponse)
-async def get_job_status(
-    job_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db)
-):
-    """Get transcription job status"""
-    # Get current user
-    current_user = await get_current_user(db)
-    
-    # Query job
-    result = await db.execute(
-        select(TranscriptionJob).where(
-            TranscriptionJob.id == job_id,
-            TranscriptionJob.user_id == current_user.id
-        )
-    )
-    job = result.scalar_one_or_none()
-    
+async def get_job_or_404(job_id: uuid.UUID, db: AsyncSession) -> TranscriptionJob:
+    job = (await db.execute(select(TranscriptionJob).where(TranscriptionJob.id == job_id))).scalar_one_or_none()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    
-    # Map status to schema
-    status_map = {
-        JOB_STATUS_PENDING: JobStatus.PENDING,
-        JOB_STATUS_UPLOADING: JobStatus.UPLOADING,
-        JOB_STATUS_VALIDATING: JobStatus.VALIDATING,
-        JOB_STATUS_PROCESSING: JobStatus.PROCESSING,
-        JOB_STATUS_COMPLETED: JobStatus.COMPLETED,
-        JOB_STATUS_ERROR: JobStatus.ERROR
-    }
-    
-    return JobStatusResponse(
-        id=job.id,
-        filename=job.filename,
-        status=status_map[job.status],
-        progress=job.progress,
-        error_message=job.error_message,
-        created_at=job.created_at,
-        started_at=job.started_at,
-        completed_at=job.completed_at
-    )
+    return job
+
+
+@router.post("/upload", response_model=JobResponse, status_code=201)
+async def upload_audio(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+    """Store the upload, create a job row and queue the transcription."""
+    name = Path(file.filename or "audio").name
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    if ext not in settings.ALLOWED_AUDIO_FORMATS:
+        raise HTTPException(400, f"Unsupported file type. Allowed: {', '.join(settings.ALLOWED_AUDIO_FORMATS)}")
+
+    job_id = uuid.uuid4()
+    directory = job_dir(job_id)
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / f"input.{ext}"
+    size = 0
+    try:
+        with open(target, "wb") as out:
+            while chunk := await file.read(1 << 20):
+                size += len(chunk)
+                if size > settings.MAX_UPLOAD_SIZE:
+                    raise HTTPException(413, f"File too large (max {settings.MAX_UPLOAD_SIZE // (1024 * 1024)} MB)")
+                out.write(chunk)
+        if size == 0:
+            raise HTTPException(400, "Empty file")
+    except HTTPException:
+        shutil.rmtree(directory, ignore_errors=True)
+        raise
+
+    job = TranscriptionJob(id=job_id, filename=name[:255], file_size_bytes=size)
+    db.add(job)
+    await db.commit()
+    await db.refresh(job)
+    try:
+        enqueue_transcription(str(job_id), str(target))
+    except Exception as e:  # broker down
+        job.status, job.error_message = "error", f"Could not queue job: {e}"
+        await db.commit()
+        raise HTTPException(503, "Job queue unavailable") from e
+    return job
+
+
+@router.get("/jobs", response_model=list[JobResponse])
+async def list_jobs(limit: int = 20, db: AsyncSession = Depends(get_db)):
+    rows = await db.execute(select(TranscriptionJob).order_by(TranscriptionJob.created_at.desc()).limit(min(limit, 100)))
+    return rows.scalars().all()
+
+
+@router.get("/jobs/{job_id}", response_model=JobResponse)
+async def get_job(job_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    return await get_job_or_404(job_id, db)
 
 
 @router.get("/jobs/{job_id}/result", response_model=JobResultResponse)
-async def get_job_result(
-    job_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db)
-):
-    """Get transcription job result"""
-    # Get current user
-    current_user = await get_current_user(db)
-    
-    # Query job with result
-    result = await db.execute(
-        select(TranscriptionJob).where(
-            TranscriptionJob.id == job_id,
-            TranscriptionJob.user_id == current_user.id
-        )
-    )
-    job = result.scalar_one_or_none()
-    
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    
-    if job.status != JOB_STATUS_COMPLETED:
-        return JobResultResponse(
-            job_id=job.id,
-            status=JobStatus(job.status)
-        )
-    
-    # Generate download URLs (includes new MuseScore formats)
-    download_urls = {
-        "musicxml": f"/api/v1/export/musicxml/{job_id}",
-        "midi": f"/api/v1/export/midi/{job_id}",
-        "pdf": f"/api/v1/export/pdf/{job_id}",
-        "mscx": f"/api/v1/export/mscx/{job_id}",
-        "mscz": f"/api/v1/export/mscz/{job_id}"
-    }
-    
-    return JobResultResponse(
-        job_id=job.id,
-        status=JobStatus.COMPLETED,
-        result=job.result_data,
-        download_urls=download_urls
-    )
+async def get_job_result(job_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    job = await get_job_or_404(job_id, db)
+    out = JobResultResponse(job_id=job.id, filename=job.filename, status=job.status)
+    if job.status == STATUS_COMPLETED:
+        out.summary = job.result
+        out.files = {k: f"/api/v1/transcription/jobs/{job_id}/files/{k}" for k in RESULT_FILES}
+    return out
 
 
-@router.delete("/jobs/{job_id}")
-async def delete_job(
-    job_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db)
-):
-    """Delete a transcription job"""
-    # Get current user
-    current_user = await get_current_user(db)
-    
-    # Query job
-    result = await db.execute(
-        select(TranscriptionJob).where(
-            TranscriptionJob.id == job_id,
-            TranscriptionJob.user_id == current_user.id
-        )
-    )
-    job = result.scalar_one_or_none()
-    
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    
-    # TODO: Clean up associated files in S3/local storage
-    
+@router.get("/jobs/{job_id}/files/{name}")
+async def get_job_file(job_id: uuid.UUID, name: str, download: bool = False, db: AsyncSession = Depends(get_db)):
+    """Serve one result file. `?download=1` adds a Content-Disposition with a friendly filename."""
+    if name not in RESULT_FILES:
+        raise HTTPException(404, "Unknown file")
+    job = await get_job_or_404(job_id, db)
+    if job.status != STATUS_COMPLETED:
+        raise HTTPException(409, "Job is not finished")
+    disk_name, media_type, ext = RESULT_FILES[name]
+    path = job_dir(job_id) / disk_name
+    if not path.exists():
+        raise HTTPException(404, "File missing")
+    stem = re.sub(r"[^A-Za-z0-9._ -]+", "_", Path(job.filename).stem).strip() or "drums"
+    return FileResponse(path, media_type=media_type, filename=f"{stem}{ext}" if download else None)
+
+
+@router.delete("/jobs/{job_id}", status_code=204)
+async def delete_job(job_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    job = await get_job_or_404(job_id, db)
     await db.delete(job)
     await db.commit()
-    
-    return {"message": "Job deleted successfully"}
+    shutil.rmtree(job_dir(job_id), ignore_errors=True)

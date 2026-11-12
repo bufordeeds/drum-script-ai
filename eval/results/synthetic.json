@@ -1,0 +1,56 @@
+{
+ "kick": {
+  "ref": 123,
+  "est": 123,
+  "tp": 123,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0
+ },
+ "snare": {
+  "ref": 106,
+  "est": 105,
+  "tp": 105,
+  "precision": 1.0,
+  "recall": 0.991,
+  "f1": 0.995
+ },
+ "tom": {
+  "ref": 48,
+  "est": 48,
+  "tp": 48,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0
+ },
+ "hihat": {
+  "ref": 329,
+  "est": 316,
+  "tp": 314,
+  "precision": 0.994,
+  "recall": 0.954,
+  "f1": 0.974
+ },
+ "cymbal": {
+  "ref": 89,
+  "est": 86,
+  "tp": 86,
+  "precision": 1.0,
+  "recall": 0.966,
+  "f1": 0.983
+ },
+ "pooled": {
+  "ref": 695,
+  "est": 678,
+  "tp": 676,
+  "precision": 0.997,
+  "recall": 0.973,
+  "f1": 0.985
+ },
+ "per_track_pooled_f1": {
+  "rock_120": 0.99,
+  "rock_drift": 0.986,
+  "shuffle_108": 0.985,
+  "sixteenth_96": 0.98
+ }
+}

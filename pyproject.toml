@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drumscript"
+version = "0.1.0"
+description = "Drum transcription pipeline: audio -> hits.json -> MusicXML / MIDI"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy<2",
+  "soundfile",
+  "mido",
+]
+
+[project.optional-dependencies]
+# The ML stack. torch/torchaudio are installed separately (CPU wheels) — see ml_worker/requirements.txt
+ml = [
+  "demucs==4.0.1",
+  "beat-this==1.1.0",
+  "librosa",
+  "adtof-pytorch @ git+https://github.com/xavriley/ADTOF-pytorch@85c192e78f716ea0b111cc8a5ee4a8f6a3a4f8a9",
+]
+eval = ["mir_eval", "pretty_midi"]
+
+[project.scripts]
+transcribe = "drumscript.cli:main"
+
+[tool.setuptools]
+packages = ["drumscript"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

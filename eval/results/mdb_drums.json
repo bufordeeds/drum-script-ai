@@ -1,0 +1,75 @@
+{
+ "kick": {
+  "ref": 1539,
+  "est": 1550,
+  "tp": 1431,
+  "precision": 0.923,
+  "recall": 0.93,
+  "f1": 0.927
+ },
+ "snare": {
+  "ref": 2654,
+  "est": 1956,
+  "tp": 1763,
+  "precision": 0.901,
+  "recall": 0.664,
+  "f1": 0.765
+ },
+ "tom": {
+  "ref": 90,
+  "est": 102,
+  "tp": 42,
+  "precision": 0.412,
+  "recall": 0.467,
+  "f1": 0.437
+ },
+ "hihat": {
+  "ref": 2639,
+  "est": 2646,
+  "tp": 2270,
+  "precision": 0.858,
+  "recall": 0.86,
+  "f1": 0.859
+ },
+ "cymbal": {
+  "ref": 1002,
+  "est": 1059,
+  "tp": 875,
+  "precision": 0.826,
+  "recall": 0.873,
+  "f1": 0.849
+ },
+ "pooled": {
+  "ref": 7924,
+  "est": 7313,
+  "tp": 6381,
+  "precision": 0.873,
+  "recall": 0.805,
+  "f1": 0.838
+ },
+ "per_track_pooled_f1": {
+  "MusicDelta_80sRock": 0.724,
+  "MusicDelta_Beatles": 0.718,
+  "MusicDelta_BebopJazz": 0.554,
+  "MusicDelta_Britpop": 0.943,
+  "MusicDelta_CoolJazz": 0.522,
+  "MusicDelta_Country1": 0.861,
+  "MusicDelta_Disco": 0.981,
+  "MusicDelta_FreeJazz": 0.794,
+  "MusicDelta_FunkJazz": 0.953,
+  "MusicDelta_FusionJazz": 0.864,
+  "MusicDelta_Gospel": 0.941,
+  "MusicDelta_Grunge": 0.928,
+  "MusicDelta_Hendrix": 1.0,
+  "MusicDelta_LatinJazz": 0.828,
+  "MusicDelta_ModalJazz": 0.783,
+  "MusicDelta_Punk": 0.874,
+  "MusicDelta_Reggae": 0.845,
+  "MusicDelta_Rock": 0.986,
+  "MusicDelta_Rockabilly": 0.99,
+  "MusicDelta_Shadows": 0.95,
+  "MusicDelta_SpeedMetal": 0.938,
+  "MusicDelta_SwingJazz": 0.699,
+  "MusicDelta_Zeppelin": 0.896
+ }
+}

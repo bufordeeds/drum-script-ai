@@ -1,0 +1,1091 @@
+{
+ "audio": "rock_drift.mp3",
+ "bpm": 104,
+ "bar_starts_s": [
+  2.3077,
+  4.6154,
+  6.8903,
+  9.1333,
+  11.3452,
+  13.5271,
+  15.6795,
+  17.8034,
+  19.8995,
+  21.9685,
+  24.011,
+  26.0278,
+  28.0195,
+  29.9867,
+  31.93
+ ],
+ "hits": [
+  {
+   "time_s": 2.3077,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 118
+  },
+  {
+   "time_s": 2.3125,
+   "drum": "cymbal",
+   "note": 49,
+   "velocity": 119
+  },
+  {
+   "time_s": 2.5938,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 64
+  },
+  {
+   "time_s": 2.8846,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 97
+  },
+  {
+   "time_s": 2.8894,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 104
+  },
+  {
+   "time_s": 3.1779,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 66
+  },
+  {
+   "time_s": 3.4579,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 89
+  },
+  {
+   "time_s": 3.4663,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 103
+  },
+  {
+   "time_s": 3.7464,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 75
+  },
+  {
+   "time_s": 4.0361,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 100
+  },
+  {
+   "time_s": 4.0445,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 105
+  },
+  {
+   "time_s": 4.3221,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 65
+  },
+  {
+   "time_s": 4.6106,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 102
+  },
+  {
+   "time_s": 4.6201,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 104
+  },
+  {
+   "time_s": 4.9021,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 64
+  },
+  {
+   "time_s": 5.1865,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 97
+  },
+  {
+   "time_s": 5.1888,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 105
+  },
+  {
+   "time_s": 5.4625,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 72
+  },
+  {
+   "time_s": 5.7528,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 99
+  },
+  {
+   "time_s": 5.7528,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 100
+  },
+  {
+   "time_s": 6.0313,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 65
+  },
+  {
+   "time_s": 6.0431,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 101
+  },
+  {
+   "time_s": 6.3239,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 117
+  },
+  {
+   "time_s": 6.3251,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 101
+  },
+  {
+   "time_s": 6.6106,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 72
+  },
+  {
+   "time_s": 6.8855,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 112
+  },
+  {
+   "time_s": 6.8867,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 87
+  },
+  {
+   "time_s": 7.1648,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 74
+  },
+  {
+   "time_s": 7.4463,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 113
+  },
+  {
+   "time_s": 7.4498,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 89
+  },
+  {
+   "time_s": 7.7279,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 77
+  },
+  {
+   "time_s": 8.0059,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 104
+  },
+  {
+   "time_s": 8.0094,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 100
+  },
+  {
+   "time_s": 8.2921,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 64
+  },
+  {
+   "time_s": 8.569,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 119
+  },
+  {
+   "time_s": 8.5737,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 98
+  },
+  {
+   "time_s": 8.8552,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 67
+  },
+  {
+   "time_s": 9.1333,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 96
+  },
+  {
+   "time_s": 9.1344,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 106
+  },
+  {
+   "time_s": 9.4155,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 74
+  },
+  {
+   "time_s": 9.6863,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 95
+  },
+  {
+   "time_s": 9.6897,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 117
+  },
+  {
+   "time_s": 9.9685,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 77
+  },
+  {
+   "time_s": 10.2335,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 101
+  },
+  {
+   "time_s": 10.3833,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 86
+  },
+  {
+   "time_s": 10.518,
+   "drum": "tom",
+   "note": 50,
+   "velocity": 97
+  },
+  {
+   "time_s": 10.6551,
+   "drum": "tom",
+   "note": 50,
+   "velocity": 92
+  },
+  {
+   "time_s": 10.7957,
+   "drum": "tom",
+   "note": 47,
+   "velocity": 105
+  },
+  {
+   "time_s": 10.9351,
+   "drum": "tom",
+   "note": 47,
+   "velocity": 85
+  },
+  {
+   "time_s": 11.0699,
+   "drum": "tom",
+   "note": 43,
+   "velocity": 110
+  },
+  {
+   "time_s": 11.2024,
+   "drum": "tom",
+   "note": 43,
+   "velocity": 99
+  },
+  {
+   "time_s": 11.3418,
+   "drum": "cymbal",
+   "note": 49,
+   "velocity": 114
+  },
+  {
+   "time_s": 11.3509,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 112
+  },
+  {
+   "time_s": 11.6191,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 77
+  },
+  {
+   "time_s": 11.885,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 112
+  },
+  {
+   "time_s": 11.8861,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 92
+  },
+  {
+   "time_s": 12.1577,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 77
+  },
+  {
+   "time_s": 12.4384,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 88
+  },
+  {
+   "time_s": 12.4407,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 111
+  },
+  {
+   "time_s": 12.7111,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 77
+  },
+  {
+   "time_s": 12.9782,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 99
+  },
+  {
+   "time_s": 12.9793,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 116
+  },
+  {
+   "time_s": 13.2555,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 68
+  },
+  {
+   "time_s": 13.5248,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 88
+  },
+  {
+   "time_s": 13.5259,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 110
+  },
+  {
+   "time_s": 13.7905,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 65
+  },
+  {
+   "time_s": 14.0618,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 91
+  },
+  {
+   "time_s": 14.0685,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 116
+  },
+  {
+   "time_s": 14.3398,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 65
+  },
+  {
+   "time_s": 14.5999,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 95
+  },
+  {
+   "time_s": 14.6044,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 103
+  },
+  {
+   "time_s": 14.8712,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 62
+  },
+  {
+   "time_s": 14.8712,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 91
+  },
+  {
+   "time_s": 15.1358,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 117
+  },
+  {
+   "time_s": 15.1436,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 89
+  },
+  {
+   "time_s": 15.4049,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 77
+  },
+  {
+   "time_s": 15.6828,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 103
+  },
+  {
+   "time_s": 15.6828,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 109
+  },
+  {
+   "time_s": 15.9494,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 64
+  },
+  {
+   "time_s": 16.2061,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 88
+  },
+  {
+   "time_s": 16.2083,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 113
+  },
+  {
+   "time_s": 16.4705,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 62
+  },
+  {
+   "time_s": 16.7382,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 88
+  },
+  {
+   "time_s": 16.747,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 97
+  },
+  {
+   "time_s": 17.0092,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 78
+  },
+  {
+   "time_s": 17.2702,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 107
+  },
+  {
+   "time_s": 17.2713,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 93
+  },
+  {
+   "time_s": 17.5346,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 74
+  },
+  {
+   "time_s": 17.8023,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 89
+  },
+  {
+   "time_s": 17.8056,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 109
+  },
+  {
+   "time_s": 18.0643,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 67
+  },
+  {
+   "time_s": 18.3242,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 111
+  },
+  {
+   "time_s": 18.3263,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 103
+  },
+  {
+   "time_s": 18.5884,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 66
+  },
+  {
+   "time_s": 18.8493,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 102
+  },
+  {
+   "time_s": 18.9846,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 79
+  },
+  {
+   "time_s": 19.1135,
+   "drum": "tom",
+   "note": 50,
+   "velocity": 99
+  },
+  {
+   "time_s": 19.239,
+   "drum": "tom",
+   "note": 50,
+   "velocity": 90
+  },
+  {
+   "time_s": 19.3787,
+   "drum": "tom",
+   "note": 47,
+   "velocity": 108
+  },
+  {
+   "time_s": 19.5032,
+   "drum": "tom",
+   "note": 47,
+   "velocity": 100
+  },
+  {
+   "time_s": 19.6429,
+   "drum": "tom",
+   "note": 43,
+   "velocity": 104
+  },
+  {
+   "time_s": 19.763,
+   "drum": "tom",
+   "note": 43,
+   "velocity": 107
+  },
+  {
+   "time_s": 19.8973,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 117
+  },
+  {
+   "time_s": 19.8984,
+   "drum": "cymbal",
+   "note": 49,
+   "velocity": 109
+  },
+  {
+   "time_s": 20.156,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 77
+  },
+  {
+   "time_s": 20.4113,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 105
+  },
+  {
+   "time_s": 20.4124,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 88
+  },
+  {
+   "time_s": 20.6753,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 71
+  },
+  {
+   "time_s": 20.9307,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 91
+  },
+  {
+   "time_s": 20.9318,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 97
+  },
+  {
+   "time_s": 21.1904,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 78
+  },
+  {
+   "time_s": 21.4501,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 93
+  },
+  {
+   "time_s": 21.4577,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 106
+  },
+  {
+   "time_s": 21.712,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 65
+  },
+  {
+   "time_s": 21.9695,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 98
+  },
+  {
+   "time_s": 21.9695,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 107
+  },
+  {
+   "time_s": 22.2227,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 65
+  },
+  {
+   "time_s": 22.4791,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 109
+  },
+  {
+   "time_s": 22.4802,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 99
+  },
+  {
+   "time_s": 22.7323,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 78
+  },
+  {
+   "time_s": 22.9908,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 113
+  },
+  {
+   "time_s": 22.995,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 93
+  },
+  {
+   "time_s": 23.2397,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 66
+  },
+  {
+   "time_s": 23.2472,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 92
+  },
+  {
+   "time_s": 23.5025,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 99
+  },
+  {
+   "time_s": 23.5036,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 111
+  },
+  {
+   "time_s": 23.761,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 75
+  },
+  {
+   "time_s": 24.0099,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 87
+  },
+  {
+   "time_s": 24.0163,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 110
+  },
+  {
+   "time_s": 24.2694,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 76
+  },
+  {
+   "time_s": 24.511,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 118
+  },
+  {
+   "time_s": 24.5131,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 91
+  },
+  {
+   "time_s": 24.7673,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 71
+  },
+  {
+   "time_s": 25.0142,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 106
+  },
+  {
+   "time_s": 25.0205,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 99
+  },
+  {
+   "time_s": 25.2726,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 72
+  },
+  {
+   "time_s": 25.5184,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 97
+  },
+  {
+   "time_s": 25.5268,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 109
+  },
+  {
+   "time_s": 25.7747,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 78
+  },
+  {
+   "time_s": 26.0226,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 115
+  },
+  {
+   "time_s": 26.033,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 95
+  },
+  {
+   "time_s": 26.2757,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 71
+  },
+  {
+   "time_s": 26.5299,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 93
+  },
+  {
+   "time_s": 26.5299,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 110
+  },
+  {
+   "time_s": 26.7757,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 70
+  },
+  {
+   "time_s": 27.0195,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 100
+  },
+  {
+   "time_s": 27.1523,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 91
+  },
+  {
+   "time_s": 27.2716,
+   "drum": "tom",
+   "note": 50,
+   "velocity": 102
+  },
+  {
+   "time_s": 27.394,
+   "drum": "tom",
+   "note": 50,
+   "velocity": 91
+  },
+  {
+   "time_s": 27.5164,
+   "drum": "tom",
+   "note": 47,
+   "velocity": 108
+  },
+  {
+   "time_s": 27.6461,
+   "drum": "tom",
+   "note": 47,
+   "velocity": 92
+  },
+  {
+   "time_s": 27.7716,
+   "drum": "tom",
+   "note": 43,
+   "velocity": 110
+  },
+  {
+   "time_s": 27.893,
+   "drum": "tom",
+   "note": 43,
+   "velocity": 106
+  },
+  {
+   "time_s": 28.0174,
+   "drum": "cymbal",
+   "note": 49,
+   "velocity": 111
+  },
+  {
+   "time_s": 28.0185,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 109
+  },
+  {
+   "time_s": 28.2664,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 71
+  },
+  {
+   "time_s": 28.5082,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 109
+  },
+  {
+   "time_s": 28.5123,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 103
+  },
+  {
+   "time_s": 28.7623,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 75
+  },
+  {
+   "time_s": 28.998,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 106
+  },
+  {
+   "time_s": 29.0021,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 100
+  },
+  {
+   "time_s": 29.2552,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 75
+  },
+  {
+   "time_s": 29.499,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 112
+  },
+  {
+   "time_s": 29.5,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 101
+  },
+  {
+   "time_s": 29.7398,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 66
+  },
+  {
+   "time_s": 29.9816,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 94
+  },
+  {
+   "time_s": 29.9908,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 114
+  },
+  {
+   "time_s": 30.2276,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 75
+  },
+  {
+   "time_s": 30.4756,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 98
+  },
+  {
+   "time_s": 30.4786,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 110
+  },
+  {
+   "time_s": 30.7205,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 67
+  },
+  {
+   "time_s": 30.9523,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 105
+  },
+  {
+   "time_s": 30.9624,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 99
+  },
+  {
+   "time_s": 31.2043,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 66
+  },
+  {
+   "time_s": 31.2053,
+   "drum": "kick",
+   "note": 36,
+   "velocity": 96
+  },
+  {
+   "time_s": 31.4392,
+   "drum": "snare",
+   "note": 38,
+   "velocity": 111
+  },
+  {
+   "time_s": 31.4412,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 88
+  },
+  {
+   "time_s": 31.6892,
+   "drum": "hihat",
+   "note": 42,
+   "velocity": 77
+  }
+ ]
+}
